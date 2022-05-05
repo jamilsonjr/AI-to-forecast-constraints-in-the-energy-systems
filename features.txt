@@ -1,0 +1,18 @@
+Features: 
+	Podemos não ter:
+		- P Solar (historico)
+		- P Vento (hist)
+		- Consumo (Hist) -> Dia da semana (dia util ou não), Season
+
+	Teremos:
+		- Irraradiação (Hist Prvisão)
+		- Temperatura (Hist Prvisão)
+		- Vel Vento (Hist Prvisão)
+		- Dir Vento (Hist Prvisão)
+
+Fazer comparação: Entre a performance
+	Classificação: 
+		- Geral, (não por node na primeira fase).
+		- Por node.
+	Regressão: 
+		- Por node.
