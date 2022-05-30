@@ -2,11 +2,15 @@
 import os
 import pandas as pd
 import pandapower as pp
+from pandapower.control.controller.const_control import ConstControl
+from pandapower.timeseries.data_sources.frame_data import DFData
+from pandapower.timeseries.run_time_series import run_timeseries
+from pandapower.timeseries.output_writer import OutputWriter
 from pandapower.plotting.plotly import simple_plotly
 from pandapower.plotting.plotly import pf_res_plotly
 from abc import ABC, abstractmethod
 
-from thesis_package import extractor as ex
+from thesis_package import extractor as ex, utils as ut
 ##############################################################################
 ############################## Element Types #################################
 ##############################################################################
@@ -59,7 +63,7 @@ class Generator(Element):
         self.q_max_kvar = q_max_kvar
         self.q_min_kvar = q_min_kvar
     def set_profile(self, power_forecast_kw=None, cost_parameter_a_mu=None, cost_parameter_b_mu=None, cost_parameter_c_mu=None, cost_nde_mu=None, ghg_cof_a_mu=None, ghg_cof_b_mu=None, ghg_cof_c_mu=None):
-        self.power_forecast_kw = power_forecast_kw
+        self.p_forecast_kw = power_forecast_kw
         self.cost_parameter_a_mu = cost_parameter_a_mu
         self.cost_parameter_b_mu = cost_parameter_b_mu
         self.cost_parameter_c_mu = cost_parameter_c_mu
@@ -80,8 +84,8 @@ class Storage(Element):
         self.p_charge_max_kw = p_charge_max_kw
         self.p_discharge_max_kw = p_discharge_max_kw
     def set_profile(self, power_charge_limit_kw=None, power_discharge_limit_kw=None, charge_price_mu=None, discharge_price_mu=None):
-        self.power_charge_limit_kw = power_charge_limit_kw
-        self.power_discharge_limit_kw = power_discharge_limit_kw
+        self.p_charge_limit_kw = power_charge_limit_kw
+        self.p_discharge_limit_kw = power_discharge_limit_kw
         self.charge_price_mu = charge_price_mu
         self.discharge_price_mu = discharge_price_mu
 # class Chargring_Station extends Element class and adds the values of:, p_charge_max_kw, p_discharge_max_kw, charge_efficiency_percent, discharge_efficienc_percent, energy_capacity_max_kwh, place_start, place_end.
@@ -97,7 +101,7 @@ class Charging_Station(Element):
         self.place_end = place_end
     # Override the method set_profile, setting the profiles of power_charge_limit_kw and p_discharge_limit_kw.
     def set_profile(self, power_charge_limit_kw=None, p_discharge_limit_kw=None):
-        self.power_charge_limit_kw = power_charge_limit_kw
+        self.p_charge_limit_kw = power_charge_limit_kw
         self.p_discharge_limit_kw = p_discharge_limit_kw
 ##############################################################################
 ############################## Other Elements ################################
@@ -202,6 +206,7 @@ class Network:
         self.storage_list = extractor.create_storages_list(raw_storage_sheet)
         self.charging_station_list = extractor.create_charging_stations_list(raw_charging_station_sheet)
         self.peer_list = extractor.create_peers_list(raw_peers_sheet)
+        del self.generator_list[-1]
     def create_pandapower_model(self):
         """Method that created a pandapower network model.
         """
@@ -212,38 +217,41 @@ class Network:
             name = 'bus_' + str(bus)
             pp.create_bus(net, vn_kv=20.0, index=bus, name=name)
         # External grid.
-        pp.create_bus(net, vn_kv=63, index=0, name=name)
+        pp.create_bus(net, vn_kv=110, index=0, name='ext_grid')
         pp.create_ext_grid(net, bus=0, vm_pu=1.0)
         # Create transformer.
-        pp.create_transformer(net, hv_bus=0, lv_bus=1, std_type='0.4 MVA 20/0.4 kV')
+        pp.create_transformer(net, hv_bus=0, lv_bus=1, std_type='40 MVA 110/20 kV') # TODO see!
         # Create tge loads from network.load_list.
         for i, load in enumerate(self.load_list):
-            name = load.id
+            name = 'load_' + str(load.id)
             bus = load.internal_bus_location
             p_mw = load.power_contracted_kw / 1000
             q_mvar  = p_mw * load.tg_phi
             pp.create_load(net, bus=bus, p_mw=p_mw, q_mvar=q_mvar, name=name)
         # Create generators from network.generator_list.
         for i, generator in enumerate(self.generator_list):
+            name = 'gen_' + str(generator.id)
             bus = generator.internal_bus_location
             p_mw = generator.p_max_kw / 1000
             q_mvar = generator.q_max_kvar / 1000
             pp.create_sgen(net, bus=bus, p_mw=p_mw, q_mvar=q_mvar, name=name)    
         # Create the storage from network.storage_list.
         for i, storage in enumerate(self.storage_list):
+            name = 'stor_' + str(storage.id)
             bus = storage.internal_bus_location
             p_mw = storage.p_charge_max_kw / 1000
             max_e_mwh = storage.energy_capacity_kvah / 1000
             pp.create_storage(net, bus=bus, p_mw=p_mw, max_e_mwh=max_e_mwh, name=name)
         # Create lines from network.info.branch_info.
+        cables_characteristics = self.info.cables_characteristics.set_index('name')
         for row in self.info.branch_info.itertuples():
             from_bus = row.bus_out
             to_bus = row.bus_in
             length_km = row.distance_km
-            r_ohm_per_km = row.r
-            x_ohm_per_km = row.x
             c_nf_per_km = row.c
             name = 'line_' + str(row.bus_out) + '_to_' + str(row.bus_in) 
+            r_ohm_per_km = cables_characteristics.loc[row.cable_type].r
+            x_ohm_per_km = cables_characteristics.loc[row.cable_type].x
             pp.create_line_from_parameters(
                 net, from_bus=from_bus, to_bus=to_bus, 
                 length_km=length_km, r_ohm_per_km=r_ohm_per_km,
@@ -256,7 +264,7 @@ class Network:
             pandapower.net: Model of the network.
         """
         return self.net_model
-    def plot_network(self, power_flow=True):
+    def plot_network(self, power_flow=False):
         """Function that plots the network. 
         Args:
             power_flow (bool, optional): Perfoms a power flow on the network. Defaults to True.
@@ -264,3 +272,159 @@ class Network:
         fig = simple_plotly(self.net_model, respect_switches=True, figsize=1)  
         if power_flow:
             fig = pf_res_plotly(self.net_model, figsize=1)
+    def add_generation_profiles(self, generation_profiles_folder_path=None):
+        """Function that adds the generation profiles to the network.
+        Args:
+            generation_profiles_path (str): Path to the generation profiles.
+        """
+        folder_path = generation_profiles_folder_path
+        pv_generation_profile = pd.read_csv(folder_path + '\\' + 'pv_data_processed.csv')
+        ut.convert_to_timestamped_data(pv_generation_profile)
+        wind_generation_profile = pd.read_csv(folder_path + '\\' + 'wind_data_processed.csv')
+        ut.convert_to_timestamped_data(wind_generation_profile)
+        # Multiply the normalized value by the installed capacity of the generator.
+        for generator in self.generator_list:
+            if generator.type_of_generator == 'PV':
+                new_profile = pv_generation_profile['normalized_value'] * generator.p_max_kw
+                generator.p_forecast_kw = new_profile 
+            elif generator.type_of_generator == 'Wind':
+                new_profile = wind_generation_profile['normalized_value'] * generator.p_max_kw
+                generator.p_forecast_kw = new_profile 
+            elif generator.type_of_generator == 'CHP':
+                # Create a new df with the CHP profile. The profile will be equal to zero if the time is inferior to 9 AM or 17 PM, and equal to p_max_kw if the time is between 9 AM and 17 PM.
+                chp_profile = pd.DataFrame(index = pv_generation_profile.index, columns = ['value'])
+                for i, time in enumerate(chp_profile.index):
+                    if time.hour < 9 or time.hour > 17:
+                        chp_profile.iloc[i] = 0
+                    else:
+                        chp_profile.iloc[i] = generator.p_max_kw        
+                generator.p_forecast_kw = chp_profile
+            elif generator.type_of_generator == 'External Suplier':
+                pass 
+            else: 
+                # raise error with the generator type is not supported.
+                raise NameError("The generator type is not supported.")
+    def add_load_profiles(self, load_profiles_folder_path=None):
+        """Function that adds the load profiles to the network.
+        Args:
+            load_profiles_path (str): Path to the load profiles.
+        """
+        folder_path = load_profiles_folder_path
+        consumption_file_list = os.listdir(folder_path)
+        for (file, load) in zip(consumption_file_list, self.load_list):
+            # Read the file.
+            new_profile = pd.read_csv(folder_path + '\\' + file)
+            ut.convert_to_timestamped_data(new_profile)
+            # Add profile to element of te grid.
+            load.p_forecast_kw = new_profile['normalized_P'] * load.power_contracted_kw 
+            load.q_forecast_kvar = new_profile['normalized_Q'] * load.power_contracted_kw * load.tg_phi
+    def create_power_flow_profiles_df(self):
+        """Function that creates a dataframe with the power flow profiles.
+        Args:
+            None
+        Returns:
+            pd.DataFrame: Dataframe with the power flow profiles.
+        """
+        # Create load profiles dataframes.
+        _index = self.load_list[0].p_forecast_kw.index
+        p_load_profile = pd.DataFrame(index=_index)
+        q_load_profile = pd.DataFrame(index=_index)
+        # active/reactive power
+        for load in self.load_list:
+            p_load_profile['load_' + str(load.id)] = load.p_forecast_kw
+            q_load_profile['load_' + str(load.id)] = load.q_forecast_kvar
+        # Create gen profiles dataframes.
+        _index = self.generator_list[0].p_forecast_kw.index
+        p_gen_profile = pd.DataFrame(index=_index)
+        q_gen_profile = pd.DataFrame(index=_index)
+        # active/reactive power
+        for gen in self.generator_list:
+            p_gen_profile['gen_' + str(gen.id)] = gen.p_forecast_kw
+            q_gen_profile['gen_' + str(gen.id)] = 0
+        self.p_load_profile = p_load_profile
+        self.q_load_profile = q_load_profile
+        self.p_gen_profile = p_gen_profile
+        self.q_gen_profile  = q_gen_profile
+    def run_timeseries_power_flow(self):
+        """Function that runs the power flow.
+        Args:
+            None
+        Returns:
+            None
+        """
+        self.create_power_flow_profiles_df()
+        # Temporario!
+        self.p_load_profile = self.p_load_profile.loc[:'2020-04-18']
+        self.q_load_profile = self.q_load_profile.loc[:'2020-04-18']
+        self.p_gen_profile = self.p_gen_profile.loc[:'2020-04-18']
+        self.q_gen_profile = self.q_gen_profile.loc[:'2020-04-18']
+        #
+        net = self.net_model
+        # Reset index.
+        from copy import deepcopy
+        timestamps_index = deepcopy(self.p_load_profile.index)
+        # Changes
+        _p_load_profile = deepcopy(self.p_load_profile)
+        _q_load_profile = deepcopy(self.q_load_profile)
+        _p_gen_profile = deepcopy(self.p_gen_profile)
+        _q_gen_profile = deepcopy(self.q_gen_profile)
+        _p_load_profile.reset_index(drop=True, inplace=True) 
+        _q_load_profile.reset_index(drop=True, inplace=True) 
+        _p_gen_profile.reset_index(drop=True, inplace=True) 
+        _q_gen_profile.reset_index(drop=True, inplace=True) 
+        # Create pandapower data source object.
+        ds_loads_active_power = DFData(_p_load_profile / 1000 )
+        ds_loads_reactive_power = DFData(_q_load_profile / 1000 )
+        ds_sgens_active_power = DFData(_p_gen_profile / 1000 )
+        ds_sgens_reactive_power = DFData(_q_gen_profile / 1000 )
+        # Controllers
+        sgens_profile_names = self.p_gen_profile.columns.to_list()
+        loads_profile_names = self.p_load_profile.columns.to_list()
+        
+
+        load_indexes = ut.get_indexes_from_net_df_name(net.load, loads_profile_names)
+        gen_indexes = ut.get_indexes_from_net_df_name(net.sgen, sgens_profile_names)
+        ConstControl(net, element='load', variable='p_mw', element_index=load_indexes, profile_name=loads_profile_names,
+                        data_source=ds_loads_active_power, recycle=False)
+        ConstControl(net, element='load', variable='q_mvar', element_index=load_indexes, profile_name=loads_profile_names,
+                        data_source=ds_loads_reactive_power, recycle=False)
+        ConstControl(net, element='sgen', variable='p_mw', element_index=gen_indexes, profile_name=sgens_profile_names,
+                        data_source=ds_sgens_active_power, recycle=False)
+        ConstControl(net, element='sgen', variable='q_mvar', element_index=gen_indexes, profile_name=sgens_profile_names,
+                        data_source=ds_sgens_reactive_power, recycle=False)
+        # Output
+        time_steps = range(0, ds_loads_active_power.df.index.__len__())
+        # if results_folder is not None:
+        #     ow = OutputWriter(net, time_steps=time_steps, output_path=os.getcwd() + '\\time_series_results', output_file_type=".csv")
+        # else:
+        ow = OutputWriter(net, time_steps=time_steps)
+        ow.log_variable('res_bus', 'vm_pu')
+        ow.log_variable('res_bus', 'p_mw')
+        ow.log_variable('res_bus', 'q_mvar')
+        ow.log_variable('res_line', 'i_ka')
+        ow.log_variable('res_line', 'p_from_mw')
+        ow.log_variable('res_line', 'q_from_mvar')
+        ow.log_variable('res_line', 'pl_mw')
+        ow.log_variable('res_line', 'ql_mvar')
+        # q from
+        ow.log_variable('res_line', 'loading_percent')
+        ow.log_variable('res_trafo', 'p_hv_mw')
+        ow.log_variable('res_trafo', 'q_hv_mvar')
+        ow.log_variable('res_trafo', 'loading_percent')
+        ow.log_variable('res_ext_grid', 'p_mw')
+        ow.log_variable('line', 'max_i_ka')
+        ow.log_variable('trafo', 'sn_mva')
+        ow.log_variable('load', 'p_mw')
+        # Run power flow
+        run_timeseries(net, time_steps=time_steps, continue_on_divergence=True, verbose=True)#, runopf=pp.runopp(net, algorithm='nr'))
+        # Prepare output
+        pf_res_bus_vm_pu = ut.match_index_with_name(net, ow.output['res_bus.vm_pu'], 'bus')
+        pf_res_bus_vm_pu['timestamps'] = timestamps_index
+        pf_res_line_loading_percent = ut.match_index_with_name(net, ow.output['res_line.loading_percent'], 'line')
+        pf_res_line_loading_percent['timestamps'] = timestamps_index
+        pf_res_line_i_ka = ut.match_index_with_name(net, ow.output['res_line.i_ka'], 'line')
+        pf_res_line_i_ka['timestamps'] = timestamps_index
+        # Save output
+        pf_res_bus_vm_pu.to_csv('.\data\ground_truth\pf_res_bus_vm_pu.csv')
+        pf_res_line_loading_percent.to_csv('.\data\ground_truth\pf_res_line_loading_percent.csv')
+        pf_res_line_i_ka.to_csv('.\data\ground_truth\pf_res_line_i_ka.csv')
