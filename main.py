@@ -20,8 +20,10 @@ network.add_generation_profiles(generation_profiles_folder_path='.\data\processe
 network.add_load_profiles(load_profiles_folder_path='.\data\processed\consumption')
 # 
 network.create_power_flow_profiles_df()
+#%%
 network.run_timeseries_power_flow()
 #%% 
 # TODO:
+# - Get Models working. LR and XGBoost
 # - Explainable AI model + Strategy Design Pattern. (Python notebook)
 # - 
