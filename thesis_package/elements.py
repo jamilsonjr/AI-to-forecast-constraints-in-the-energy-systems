@@ -354,10 +354,10 @@ class Network:
         """
         self.create_power_flow_profiles_df()
         # Temporario!
-        self.p_load_profile = self.p_load_profile.loc[:'2020-04-18']
-        self.q_load_profile = self.q_load_profile.loc[:'2020-04-18']
-        self.p_gen_profile = self.p_gen_profile.loc[:'2020-04-18']
-        self.q_gen_profile = self.q_gen_profile.loc[:'2020-04-18']
+        self.p_load_profile = self.p_load_profile.loc['2020-04-18':]
+        self.q_load_profile = self.q_load_profile.loc['2020-04-18':]
+        self.p_gen_profile = self.p_gen_profile.loc['2020-04-18':]
+        self.q_gen_profile = self.q_gen_profile.loc['2020-04-18':]
         #
         net = self.net_model
         # Reset index.
