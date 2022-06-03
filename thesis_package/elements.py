@@ -345,7 +345,8 @@ class Network:
         self.q_load_profile = q_load_profile
         self.p_gen_profile = p_gen_profile
         self.q_gen_profile  = q_gen_profile
-    def run_timeseries_power_flow(self):
+        
+    def run_timeseries_power_flow(self, path_to_results_folder='.'):
         """Function that runs the power flow.
         Args:
             None
@@ -354,10 +355,10 @@ class Network:
         """
         self.create_power_flow_profiles_df()
         # Temporario!
-        self.p_load_profile = self.p_load_profile.loc['2020-04-18':]
-        self.q_load_profile = self.q_load_profile.loc['2020-04-18':]
-        self.p_gen_profile = self.p_gen_profile.loc['2020-04-18':]
-        self.q_gen_profile = self.q_gen_profile.loc['2020-04-18':]
+        self.p_load_profile = self.p_load_profile.loc[:'2020-04-18']
+        self.q_load_profile = self.q_load_profile.loc[:'2020-04-18']
+        self.p_gen_profile = self.p_gen_profile.loc[:'2020-04-18']
+        self.q_gen_profile = self.q_gen_profile.loc[:'2020-04-18']
         #
         net = self.net_model
         # Reset index.
@@ -425,6 +426,7 @@ class Network:
         pf_res_line_i_ka = ut.match_index_with_name(net, ow.output['res_line.i_ka'], 'line')
         pf_res_line_i_ka['timestamps'] = timestamps_index
         # Save output
-        pf_res_bus_vm_pu.to_csv('.\data\ground_truth\pf_res_bus_vm_pu.csv')
-        pf_res_line_loading_percent.to_csv('.\data\ground_truth\pf_res_line_loading_percent.csv')
-        pf_res_line_i_ka.to_csv('.\data\ground_truth\pf_res_line_i_ka.csv')
+        pf_res_bus_vm_pu.to_csv(path_to_results_folder + '\pf_res_bus_vm_pu.csv')
+        pf_res_line_loading_percent.to_csv(path_to_results_folder + '\pf_res_line_loading_percent.csv')
+        pf_res_line_i_ka.to_csv(path_to_results_folder + '\pf_res_line_i_ka.csv')
+        
