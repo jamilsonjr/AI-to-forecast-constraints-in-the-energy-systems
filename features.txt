@@ -9,10 +9,12 @@ Features:
 		- Temperatura (Hist Prvisão)
 		- Vel Vento (Hist Prvisão)
 		- Dir Vento (Hist Prvisão)
+	Posso adicionar:
+		- Features com relação temporal. Ex: Vento, problemas de tensão anteriorers etc etc... 
 
 Fazer comparação: Entre a performance
 	Classificação: 
-		- Geral, (não por node na primeira fase).
+		- Geral, (nxão por node na primeira fase).
 		- Por node.
 	Regressão: 
 		- Por node.
