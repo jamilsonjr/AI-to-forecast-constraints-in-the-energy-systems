@@ -1,7 +1,10 @@
 __pycache__/
 data/
 env/
+plots/
 
+
+*.pickle
 *.pyc
 *.pyo
 *.xlsx

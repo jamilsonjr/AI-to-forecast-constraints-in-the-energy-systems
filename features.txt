@@ -5,12 +5,12 @@ Features:
 		- Consumo (Hist) -> Dia da semana (dia util ou não), Season
 
 	Teremos:
-		- Irraradiação (Hist Prvisão)
-		- Temperatura (Hist Prvisão)
-		- Vel Vento (Hist Prvisão)
-		- Dir Vento (Hist Prvisão)
+		- Irraradiação (Hist Prvisão) [DONE]
+		- Temperatura (Hist Prvisão)  [DONE]
+		- Vel Vento (Hist Prvisão) [DONE]
+		- Dir Vento (Hist Prvisão) [DONE]
 	Posso adicionar:
-		- Features com relação temporal. Ex: Vento, problemas de tensão anteriorers etc etc... 
+		- Features com relação temporal. Ex: Vento, problemas de tensão anteriorers etc etc... [DONE] 
 
 Fazer comparação: Entre a performance
 	Classificação: 
@@ -18,3 +18,14 @@ Fazer comparação: Entre a performance
 		- Por node.
 	Regressão: 
 		- Por node.
+
+-------------
+Geral
+	- Tratar do powerflow (!)
+	- Ver em que busses que tenho problemas de tensão. Se são os mesmo que tem influencia das features.
+
+Decidir metricas de error para os metodos futuros:
+	- Ver metricas de classificação.
+	- Ver metrica percentual para comparação de performance entre os dois metodos.
+
+

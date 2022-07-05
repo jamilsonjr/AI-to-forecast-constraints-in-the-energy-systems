@@ -131,7 +131,7 @@ class Extractor:
                 q_min_kvar=generators_info['q_min_kvar'].loc[i].values[0]
             )
             new_generator.set_profile(
-                power_forecast_kw=generators_info['p_forecast_kw'].loc[i],
+                power_real_kw=generators_info['p_forecast_kw'].loc[i],
                 cost_parameter_a_mu = generators_info['cost_parameter_a_mu'].loc[i],
                 cost_parameter_b_mu = generators_info['cost_parameter_b_mu'].loc[i],
                 cost_parameter_c_mu = generators_info['cost_parameter_c_mu'].loc[i],
@@ -194,16 +194,16 @@ class Extractor:
             new_load = elements.Load(
                 id=loads_info['load_id'].loc[i],
                 internal_bus_location=loads_info['internal_bus_location'].loc[i].values[0],
-                manager=loads_info['manager_id'].loc[i],
-                owner=loads_info['owner_id'].loc[i],
+                manager=loads_info['manager_id'].loc[i].values[0],
+                owner=loads_info['owner_id'].loc[i].values[0],
                 type_of_contract=loads_info['type_of_contract'].loc[i].values[0],
                 charge_type=loads_info['charge_type'].loc[i].values[0],
                 power_contracted_kw=loads_info['p_contracted_kw'].loc[i].values[0],
                 tg_phi=loads_info['tg_phi'].loc[i].values[0]
             )            
             new_load.set_profile(
-                p_forecast_kw=loads_info['p_forecast_kw'].loc[i],
-                q_forecast_kvar=loads_info['q_forecast_kvar'].loc[i],
+                p_real_kw=loads_info['p_forecast_kw'].loc[i],
+                q_real_kvar=loads_info['q_forecast_kvar'].loc[i],
                 p_reduce_kw=loads_info['p_reduce_kw'].loc[i],
                 p_cut_kw=loads_info['p_cut_kw'].loc[i],
                 p_move_kw=loads_info['p_move_kw'].loc[i],
