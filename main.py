@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from thesis_package import utils as ut, extractor as ex, elements as el  
+from thesis_package import utils as ut, extractor as ex, elements as el, powerflow as pf
 def main():
     pass
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if 'network.pickle' not in os.listdir() or 'power_flow.pickle' not in os.listdir
     # Method that receives a .csv files folder and adds the load profile to the grid elements.
     network.add_load_profiles(load_profiles_folder_path='.\data\processed\consumption')
     # Power flow calculation
-    power_flow = el.Power_Flow()
+    power_flow = pf.Power_Flow()
     path_to_results_folder = '.\data\ground_truth'
     power_flow.run_timeseries_power_flow(network, path_to_results_folder='.\data\ground_truth')
     ut.serialize_object('network', network, message='Serializing network object...')
