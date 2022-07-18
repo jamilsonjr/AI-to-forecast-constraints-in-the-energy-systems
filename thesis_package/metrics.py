@@ -67,6 +67,12 @@ class Metrics:
         else: 
             self.precision = 0
         print('Precision:', self.precision, '\n', 'TP: {}, FP: {}'.format(self.true_positives_ctr, self.false_positives_ctr))
+        # Compute F1 score from the above results.
+        if self.precision + self.recall != 0:
+            self.f1_score = 2 * (self.precision * self.recall) / (self.precision + self.recall)
+        else:
+            self.f1_score = 0
+        print('F1 score:', self.f1_score, '\n', 'Precision: {}, Recall: {}'.format(self.precision, self.recall))
     def plot_series(self, series1, series2, threshold=None, title=None):
         plt.figure(figsize=(25,8))
         plt.plot(series1, label='Ground truth')

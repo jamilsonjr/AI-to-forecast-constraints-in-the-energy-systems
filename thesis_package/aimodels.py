@@ -11,17 +11,17 @@ class Strategy(ABC):
         pass
 class Context():
     def __init__(self, strategy: Strategy) -> None:
-        self._strategy = strategy
+        self.strategies = [strategy]
     @property
     def strategy(self) -> Strategy:
-        return self._strategy
+        return self.strategies[-1]
     @strategy.setter
     def strategy(self, strategy: Strategy) -> None:
-       self._strategy = strategy
+       self.strategies.append(strategy)
     def fit(self, data: dict) -> None:
-        return self._strategy.fit(data)
+        return self.strategies[-1].fit(data)
     def predict(self, data: dict) -> None:
-        return self._strategy.predict(data)
+        return self.strategies[-1].predict(data)
 
 # Implement the Linear Regression Strategy Class using sci-kit learn.
 from sklearn.linear_model import LinearRegression
@@ -30,7 +30,6 @@ class LinearRegressionStrategy(Strategy):
         self.model = LinearRegression()
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
-        self.linear_regressor = copy.deepcopy(self.model)
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
 
@@ -42,6 +41,5 @@ class GradientBoostRegressorStrategy(Strategy):
         self.model =  MultiOutputRegressor(ensemble.GradientBoostingRegressor(**hyper_parms))
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
-        self.gradient_boost_regressor = copy.deepcopy(self.model)
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
