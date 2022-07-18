@@ -5,9 +5,7 @@ import pandapower as pp
 from pandapower.plotting.plotly import simple_plotly
 from pandapower.plotting.plotly import pf_res_plotly
 from abc import ABC, abstractmethod
-
-import utils as ut
-import extractor as ex
+from thesis_package import extractor as ex, utils as ut
 ##############################################################################
 ############################## Element Types #################################
 ##############################################################################

@@ -1,3 +1,4 @@
+import copy
 from abc import ABC, abstractmethod
 
 # Implement the Stretegy design pattern.
@@ -29,6 +30,7 @@ class LinearRegressionStrategy(Strategy):
         self.model = LinearRegression()
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
+        self.linear_regressor = copy.deepcopy(self.model)
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
 
@@ -40,5 +42,6 @@ class GradientBoostRegressorStrategy(Strategy):
         self.model =  MultiOutputRegressor(ensemble.GradientBoostingRegressor(**hyper_parms))
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
+        self.gradient_boost_regressor = copy.deepcopy(self.model)
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
