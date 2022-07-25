@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from numpy import sqrt
 import numpy as np
+import seaborn as sns
 class Metrics:
     def get_prediction_scores(self, y_pred, y_test, threshold):
         """ Function that returns a hybrid metrics
@@ -84,3 +85,4 @@ class Metrics:
         plt.title(title)
         plt.show()
     
+        

@@ -21,3 +21,8 @@ This is an index of Jupyter notebooks present in this master thesis project. Eac
     - Propose a new metric for the machine learning algorithms. This metric aims to be more representative regarding the domain of the problem.
     - Study the difference between the dataset with the real values of P and Q for load an gen and the dataset with exogneous data (temperature and irradiance forecasts, ...) in terms of results of the Linear Regression model.
     - Check the affect of different thresholds on the metric.
+- `create_target_features.ipynb`: 
+    - Explication of the methodology.
+    - Import from csv.
+    - Crate the target feature for min_voltage_bus, max_voltage_bus, and max_current_line.
+    - Save to csv.

@@ -7,6 +7,8 @@ from pandapower.timeseries.output_writer import OutputWriter
 
 from thesis_package import utils as ut
 
+from copy import deepcopy
+
 class Power_Flow:
     def create_power_flow_profiles_df(self, network):
         """Function that creates a dataframe with the power flow profiles.
@@ -36,24 +38,23 @@ class Power_Flow:
         self.p_gen_profile_kw = p_gen_profile_kw
         self.q_gen_profile_kvar  = q_gen_profile_kvar
         # Active gen profile.
-        p_gen_profile_kw  = - self.p_gen_profile_kw
+        p_gen_profile_kw  = - deepcopy(self.p_gen_profile_kw)
         # Add 'active_' to every column name of the p_gen_profile dataframe.
         p_gen_profile_kw.columns = ['active_' + i for i in p_gen_profile_kw.columns]
         # Reactive gen profile.
-        q_gen_profile_kvar  = - self.q_gen_profile_kvar
+        q_gen_profile_kvar  = - deepcopy(self.q_gen_profile_kvar)
         # Add 'reactive_' to every column name of the q_gen_profile dataframe.
         q_gen_profile_kvar.columns = ['reactive_' + i for i in q_gen_profile_kvar.columns]
         # Active load profile.
-        p_load_profile_kw = self.p_load_profile_kw
+        p_load_profile_kw = deepcopy(self.p_load_profile_kw)
         # Add 'active_' to every column name of the p_load_profile dataframe.
         p_load_profile_kw.columns = ['active_' + i for i in p_load_profile_kw.columns]
         # Reactive load profile.
-        q_load_profile_kvar = self.q_load_profile_kvar
+        q_load_profile_kvar = deepcopy(self.q_load_profile_kvar)
         # Add 'reactive_' to every column name of the q_load_profile dataframe.
         q_load_profile_kvar.columns = ['reactive_' + i for i in q_load_profile_kvar.columns]
         # Combine the active and reactive power profiles into a single dataframe.
         self.profile_data = pd.concat([p_gen_profile_kw, q_gen_profile_kvar, p_load_profile_kw, q_load_profile_kvar], axis=1).reset_index(drop=True)
-        
     def run_timeseries_power_flow(self, network, path_to_results_folder='.'):
         """Function that runs the power flow.
         Args:
