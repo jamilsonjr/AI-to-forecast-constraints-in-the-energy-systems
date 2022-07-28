@@ -39,41 +39,42 @@ class Metrics:
                     else: #_y_pred.iloc[i, j] < 0:
                         true_negatives_sse += _squared_error.iloc[i, j]
                         self.true_negatives_ctr += 1
-        self.true_positives_rmse = sqrt(true_positives_sse/self.true_positives_ctr)
-        self.false_positives_rmse = sqrt(false_positives_sse/self.false_positives_ctr)
-        self.false_negatives_rmse = sqrt(false_negatives_sse/self.false_negatives_ctr)
-        self.true_negatives_rmse = sqrt(true_negatives_sse/self.true_negatives_ctr)
+        compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
+        self.true_positives_rmse = compute_rmse(true_positives_sse, self.true_positives_ctr) #sqrt(true_positives_sse/self.true_positives_ctr)
+        self.false_positives_rmse = compute_rmse(false_positives_sse, self.false_positives_ctr)#sqrt(false_positives_sse/self.false_positives_ctr)
+        self.false_negatives_rmse = compute_rmse(false_negatives_sse, self.false_negatives_ctr)#sqrt(false_negatives_sse/self.false_negatives_ctr)
+        self.true_negatives_rmse = compute_rmse(true_negatives_sse, self.true_negatives_ctr)#sqrt(true_negatives_sse/self.true_negatives_ctr)
     def get_report(self):
         # Print the above results.
-        print('True positives RMSE:', self.true_positives_rmse)
-        print('False positives RMSE:', self.false_positives_rmse)
-        print('False negatives RMSE:', self.false_negatives_rmse)
-        print('True negatives RMSE:', self.true_negatives_rmse)
+        # print('True positives RMSE:', self.true_positives_rmse)
+        # print('False positives RMSE:', self.false_positives_rmse)
+        # print('False negatives RMSE:', self.false_negatives_rmse)
+        # print('True negatives RMSE:', self.true_negatives_rmse)
         # Compute recall from the above results.
         # Compute recall from the above results.
         if (self.true_positives_ctr + self.false_negatives_ctr) != 0:
             self.recall = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_negatives_ctr)
         else:
             self.recall = 0
-        print('Recall:', self.recall, '\n', 'TP: {}, FN: {}'.format(self.true_positives_ctr, self.false_negatives_ctr))
+        # print('Recall:', self.recall, '\n', 'TP: {}, FN: {}'.format(self.true_positives_ctr, self.false_negatives_ctr))
         # Compute accuracy from the above results.
         if self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr != 0:
             self.accuracy = (self.true_positives_ctr + self.true_negatives_ctr) / (self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr)
         else:
             self.accuracy = 0
-        print('Accuracy:', self.accuracy, '\n', 'TP: {}, FP: {}, TN: {}, FN: {}'.format(self.true_positives_ctr, self.false_positives_ctr, self.true_negatives_ctr, self.false_negatives_ctr))
+        # print('Accuracy:', self.accuracy, '\n', 'TP: {}, FP: {}, TN: {}, FN: {}'.format(self.true_positives_ctr, self.false_positives_ctr, self.true_negatives_ctr, self.false_negatives_ctr))
         # Compute precision of the above results.
         if self.true_positives_ctr + self.false_positives_ctr != 0:
             self.precision = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_positives_ctr)
         else: 
             self.precision = 0
-        print('Precision:', self.precision, '\n', 'TP: {}, FP: {}'.format(self.true_positives_ctr, self.false_positives_ctr))
+        # print('Precision:', self.precision, '\n', 'TP: {}, FP: {}'.format(self.true_positives_ctr, self.false_positives_ctr))
         # Compute F1 score from the above results.
         if self.precision + self.recall != 0:
             self.f1_score = 2 * (self.precision * self.recall) / (self.precision + self.recall)
         else:
             self.f1_score = 0
-        print('F1 score:', self.f1_score, '\n', 'Precision: {}, Recall: {}'.format(self.precision, self.recall))
+        # print('F1 score:', self.f1_score, '\n', 'Precision: {}, Recall: {}'.format(self.precision, self.recall))
     def plot_series(self, series1, series2, threshold=None, title=None):
         plt.figure(figsize=(25,8))
         plt.plot(series1, label='Ground truth')
