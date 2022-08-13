@@ -3,6 +3,11 @@ import datetime
 import pickle
 import pandas as pd
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils import shuffle
+
+
 def get_csv_from_folder(path):
     return  [pd.read_csv(path + file) for file in os.listdir(path)]
 
@@ -42,6 +47,7 @@ def serialize_object(name, data, message=None):
     execution_time = time_diff.total_seconds()
     if message:
         print(message + ':🗸 (Execution time: {}[s])'.format(execution_time))
+
 def deserialize_object(name, message=None):
     '''
     Summary: Function that takes the name of a PICKLE file_path and deserializes the data into to the python progm.
@@ -63,3 +69,21 @@ def deserialize_object(name, message=None):
     if message:
         print(message + '🗸 (Execution time: {}[s])'.format(execution_time))
     return result
+
+# Scaling reference here https://www.atoti.io/articles/when-to-perform-a-feature-scaling/
+def split_and_suffle(X, y, test_size=0.2, scaling=False):
+    
+    le = LabelEncoder()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
+    X_train['season'] = le.fit_transform(X_train['season'])
+    X_test['season'] = le.fit_transform(X_test['season'])   
+    X_train, y_train = shuffle(X_train, y_train)
+    if scaling:
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+        y_train = scaler.transform(y_train)
+        y_test = scaler.transform(y_test)                           
+    return X_train, X_test, y_train, y_test

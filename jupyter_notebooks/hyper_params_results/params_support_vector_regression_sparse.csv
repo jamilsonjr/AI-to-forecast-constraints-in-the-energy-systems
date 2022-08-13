@@ -1,0 +1,6 @@
+params,value
+kernel,sigmoid
+C,6.781825120916302e-05
+degree,1
+gamma,0.0037356189491467256
+value,0.0
