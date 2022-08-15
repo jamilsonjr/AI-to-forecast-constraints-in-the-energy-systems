@@ -87,3 +87,10 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
         y_train = scaler.transform(y_train)
         y_test = scaler.transform(y_test)                           
     return X_train, X_test, y_train, y_test
+
+def convert_df_to_bool(df):
+    for col in df.columns:
+        df[col] = df[col].astype(bool)
+    return df
+
+cols_with_positive_values = lambda df: [col for col in df.columns if df[col].any()]

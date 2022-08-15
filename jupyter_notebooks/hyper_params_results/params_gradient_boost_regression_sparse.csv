@@ -1,5 +1,5 @@
 params,value
-n_estimators,1777
-learning_rate,0.7499437544994538
-loss,huber
-value,0.0
+n_estimators,3141
+learning_rate,0.31312005073807486
+loss,quantile
+value,0.000758961427154466

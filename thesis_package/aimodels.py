@@ -86,3 +86,11 @@ class SupportVectorClassifierStrategy(Strategy):
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
+
+class GradientBoostClassifierStrategy(Strategy):
+    def __init__(self, hyper_parms: dict) -> None:
+        self.model =  MultiOutputClassifier(ensemble.GradientBoostingClassifier(**hyper_parms))
+    def fit(self, data: dict) -> None:
+        self.model.fit(data['X_train'], data['y_train'])
+    def predict(self, data: dict) -> None:
+        return self.model.predict(data['X_test'])
