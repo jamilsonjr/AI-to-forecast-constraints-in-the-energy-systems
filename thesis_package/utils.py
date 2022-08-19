@@ -72,20 +72,18 @@ def deserialize_object(name, message=None):
 
 # Scaling reference here https://www.atoti.io/articles/when-to-perform-a-feature-scaling/
 def split_and_suffle(X, y, test_size=0.2, scaling=False):
-    
     le = LabelEncoder()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
     X_train['season'] = le.fit_transform(X_train['season'])
     X_test['season'] = le.fit_transform(X_test['season'])   
     X_train, y_train = shuffle(X_train, y_train)
     if scaling:
-        from sklearn.preprocessing import StandardScaler
-        scaler = StandardScaler()
-        scaler.fit(X_train)
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
-        y_train = scaler.transform(y_train)
-        y_test = scaler.transform(y_test)                           
+        from sklearn.preprocessing import MinMaxScaler
+        scaler = MinMaxScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
+        y_train = scaler.fit_transform(y_train)
+        y_test = scaler.fit_transform(y_test)                           
     return X_train, X_test, y_train, y_test
 
 def convert_df_to_bool(df):
