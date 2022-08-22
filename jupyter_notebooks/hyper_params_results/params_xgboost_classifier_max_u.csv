@@ -1,0 +1,7 @@
+params,value
+loss,exponential
+learning_rate,0.0009145731961166115
+n_estimators,45
+subsample,1.513808683269783e-08
+max_depth,8
+value,0.0

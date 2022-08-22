@@ -1,7 +1,0 @@
-params,value
-booster,gblinear
-lambda,1.4617144209122512e-06
-alpha,0.09865530031009674
-subsample,0.3609716863271228
-colsample_bytree,0.6484747255416106
-value,0.0

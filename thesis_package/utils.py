@@ -78,8 +78,8 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
     X_test['season'] = le.fit_transform(X_test['season'])   
     X_train, y_train = shuffle(X_train, y_train)
     if scaling:
-        from sklearn.preprocessing import MinMaxScaler
-        scaler = MinMaxScaler()
+        from sklearn.preprocessing import MaxAbsScaler
+        scaler = MaxAbsScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
         y_train = scaler.fit_transform(y_train)

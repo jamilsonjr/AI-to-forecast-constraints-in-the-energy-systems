@@ -1,0 +1,7 @@
+params,value
+loss,deviance
+learning_rate,0.06428716786770712
+n_estimators,86
+subsample,9.711446099352868e-06
+max_depth,9
+value,0.0
