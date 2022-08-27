@@ -83,7 +83,11 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
         y_train = scaler.fit_transform(y_train)
-        y_test = scaler.fit_transform(y_test)                           
+        y_test = scaler.fit_transform(y_test)
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)                          
+    y_train = pd.DataFrame(y_train, columns=y.columns)
+    y_test = pd.DataFrame(y_test, columns=y.columns)                      
     return X_train, X_test, y_train, y_test
 
 def convert_df_to_bool(df):
