@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
 from numpy import sqrt
-import numpy as np
-import seaborn as sns
 class Metrics:
     def get_prediction_scores(self, y_pred, y_test, threshold):
         """ Function that returns a hybrid metrics
@@ -44,6 +42,29 @@ class Metrics:
         self.false_positives_rmse = compute_rmse(false_positives_sse, self.false_positives_ctr)#sqrt(false_positives_sse/self.false_positives_ctr)
         self.false_negatives_rmse = compute_rmse(false_negatives_sse, self.false_negatives_ctr)#sqrt(false_negatives_sse/self.false_negatives_ctr)
         self.true_negatives_rmse = compute_rmse(true_negatives_sse, self.true_negatives_ctr)#sqrt(true_negatives_sse/self.true_negatives_ctr)
+        # Precision, recall, accuracy, f1 score.
+        if (self.true_positives_ctr + self.false_negatives_ctr) != 0:
+            self.recall = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_negatives_ctr)
+        else:
+            self.recall = 0
+        # print('Recall:', self.recall, '\n', 'TP: {}, FN: {}'.format(self.true_positives_ctr, self.false_negatives_ctr))
+        # Compute accuracy from the above results.
+        if self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr != 0:
+            self.accuracy = (self.true_positives_ctr + self.true_negatives_ctr) / (self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr)
+        else:
+            self.accuracy = 0
+        # print('Accuracy:', self.accuracy, '\n', 'TP: {}, FP: {}, TN: {}, FN: {}'.format(self.true_positives_ctr, self.false_positives_ctr, self.true_negatives_ctr, self.false_negatives_ctr))
+        # Compute precision of the above results.
+        if self.true_positives_ctr + self.false_positives_ctr != 0:
+            self.precision = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_positives_ctr)
+        else: 
+            self.precision = 0
+        # print('Precision:', self.precision, '\n', 'TP: {}, FP: {}'.format(self.true_positives_ctr, self.false_positives_ctr))
+        # Compute F1 score from the above results.
+        if self.precision + self.recall != 0:
+            self.f1_score = 2 * (self.precision * self.recall) / (self.precision + self.recall)
+        else:
+            self.f1_score = 0
     def get_report(self):
         # Print the above results.
         # print('True positives RMSE:', self.true_positives_rmse)
