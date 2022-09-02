@@ -95,3 +95,128 @@ class GradientBoostClassifierStrategy(Strategy):
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
+
+import torch
+from torch import nn
+from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+class MultilayerPerceptronClassifierStrategy(Strategy):
+    def __init__(self, hyper_parms: dict) -> None:
+        self.output_size = hyper_parms['output_size']
+        self.input_size = hyper_parms['output_size']
+        self.hidden_size = hyper_parms['hidden_size']
+        self.n_leayers = hyper_parms['n_leayers']
+        self.dropout = hyper_parms['dropout']
+        self.optimizer = hyper_parms['optimizer']
+        self.lr = hyper_parms['lr']
+        self.epochs = hyper_parms['epochs']
+        self.batch = hyper_parms['batch']
+        
+        layers = []
+        for i in range(self.n_leayers):
+            if i == 0:
+                layers.append(nn.Linear(self.input_size, self.hidden_size))
+            else:
+                layers.append(nn.Linear(self.hidden_size, self.hidden_size))
+            layers.append(nn.Tanh())
+            layers.append(nn.Dropout(self.dropout))
+        layers.append(nn.Linear(self.hidden_size, self.output_size))
+        self.feedforward_nn = nn.Sequential(*layers)
+    def forward(self, x, **kwargs):
+        """
+        x (batch_size x n_features): a batch of training examples
+        This method needs to perform all the computation needed to compute
+        the output logits from x. This will include using various hidden
+        layers, pointwise nonlinear functions, and dropout.
+        """
+        return self.feedforward_nn(x)
+    def train_batch(X, y, model, optimizer, criterion, **kwargs):
+        """
+        X (n_examples x n_features)
+        y (n_examples): gold labels
+        model: a PyTorch defined model
+        optimizer: optimizer used in gradient step
+        criterion: loss function
+        To train a batch, the model needs to predict outputs for X, compute the
+        loss between these predictions and the "gold" labels y using the criterion,
+        and compute the gradient of the loss with respect to the model parameters.
+        Check out https://pytorch.org/docs/stable/optim.html for examples of how
+        to use an optimizer object to update the parameters.
+        This function should return the loss (tip: call loss.item()) to get the
+        loss as a numerical value that is not part of the computation graph.
+        """
+        # Forward
+        #print('X shape: {}'.format(X.shape))
+        output = model(X)  # Computes the gradient of the given tensor w.r.t. the weights/bias
+        #print('output shape: {}, y_shape: {}'.format(output.shape, y.shape))
+        loss = criterion(output, y) # cross entropy in this case
+        # Backwards
+        optimizer.zero_grad()  # Setting our stored gradients equal to zero
+        loss.backward() # Computes the gradient of the given tensor w.r.t. graph leaves 
+        optimizer.step() # Updates weights and biases with the optimizer (SGD of ADAM)
+        return loss.item()
+    def plot(epochs, plottable, ylabel='', title=''):
+        plt.clf()
+        plt.xlabel('Epoch')
+        plt.ylabel(ylabel)
+        plt.plot(epochs, plottable)
+        plt.grid()
+        plt.title(title)
+    def fit(self, data: dict) -> None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        dataset = ThesisDataset(data)
+        dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+        test_X, test_y = dataset.X_test, dataset.y_test
+        # initialize the model    
+        self.model = self.feedforward_nn
+        # get an optimizer
+        optims = {"adam": torch.optim.Adam, "sgd": torch.optim.SGD}
+        optim_cls = optims[self.optimizer]
+        optimizer = optim_cls(
+            self.model.parameters(),
+            lr=self.lr,
+            weight_decay=0.0)
+        # get a loss criterion
+        criterion = nn.CrossEntropyLoss()
+        # training loop
+        epochs = torch.arange(1, self.epochs + 1)
+        train_mean_losses = []
+        valid_accs = []
+        train_losses = []
+        for ii in epochs:
+            print('Training epoch {}'.format(ii))
+            for X_batch, y_batch in dataloader:
+                # X = batch_size x 11, y = batch_size x 34
+                loss = self.train_batch(
+                    X_batch, y_batch, self.model, optimizer, criterion)
+                train_losses.append(loss)
+            mean_loss = torch.tensor(train_losses).mean().item()
+            print('Training loss: %.4f' % (mean_loss))
+
+            train_mean_losses.append(mean_loss)
+        final_acc = self.evaluate(self.model, test_X, test_y)
+        print('Final Test acc: %.4f' % (self.evaluate(self.model, test_X, test_y)))
+        # plot
+        self.plot(epochs, train_mean_losses, ylabel='Loss', title='Loss(Epoch)')    
+    def predict(self, data: dict) -> None:
+        test_X = data['X_test']
+        X_test = torch.from_numpy(test_X.values).float()
+        scores = self.model(X_test)  # (n_examples x n_classes)
+        return scores
+
+##############################################################################
+############################### Datasets #####################################
+##############################################################################
+
+class ThesisDataset(Dataset):
+    def __init__(self, data) -> None:
+        train_X, train_y = data['X_train'], data['y_train']
+        test_X, test_y = data['X_test'], data['y_test']
+        self.X = torch.from_numpy(train_X.values).float()
+        self.y = torch.from_numpy(train_y.values).float()
+        self.X_test = torch.from_numpy(test_X.values).float()
+        self.y_test = torch.from_numpy(test_y.values).float()
+    def __getitem__(self, index) -> tuple:
+        return self.X[index], self.y[index]
+    def __len__(self) -> int:
+        return len(self.X)
