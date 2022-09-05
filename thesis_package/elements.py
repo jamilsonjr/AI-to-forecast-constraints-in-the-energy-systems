@@ -264,9 +264,9 @@ class Network:
         Args:
             power_flow (bool, optional): Perfoms a power flow on the network. Defaults to True.
         """
-        fig = simple_plotly(self.net_model, respect_switches=True, figsize=1)  
+        fig = simple_plotly(self.net_model, respect_switches=True, figsize=2)  
         if power_flow:
-            fig = pf_res_plotly(self.net_model, figsize=1)
+            fig = pf_res_plotly(self.net_model, figsize=2)
     def add_generation_profiles(self, generation_profiles_folder_path=None):
         """Function that adds the generation profiles to the network.
         Args:

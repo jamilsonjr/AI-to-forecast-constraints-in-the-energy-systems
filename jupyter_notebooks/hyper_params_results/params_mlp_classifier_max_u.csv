@@ -1,0 +1,10 @@
+params,value
+hidden_size,77
+n_layers,1
+dropout,0.1942268077885917
+activation,tanh
+optimizer,adam
+lr,0.004957123132399098
+epochs,62
+batch_size,16
+value,0.1936182295733655

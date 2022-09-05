@@ -1,3 +1,7 @@
+import torch
+from torch import nn
+from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 ##############################################################################
 ######################## Strategy Design Pattern #############################
@@ -95,32 +99,38 @@ class GradientBoostClassifierStrategy(Strategy):
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
         return self.model.predict(data['X_test'])
-
-import torch
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
-class MultilayerPerceptronClassifierStrategy(Strategy):
+class MultilayerPerceptronStrategy(Strategy):
     def __init__(self, hyper_parms: dict) -> None:
         self.output_size = hyper_parms['output_size']
-        self.input_size = hyper_parms['output_size']
+        self.input_size = hyper_parms['input_size']
         self.hidden_size = hyper_parms['hidden_size']
-        self.n_leayers = hyper_parms['n_leayers']
+        self.n_layers = hyper_parms['n_layers']
         self.dropout = hyper_parms['dropout']
+        self.activation = hyper_parms['activation']
         self.optimizer = hyper_parms['optimizer']
         self.lr = hyper_parms['lr']
         self.epochs = hyper_parms['epochs']
-        self.batch = hyper_parms['batch']
+        self.batch_size = hyper_parms['batch_size']
+        self.classifier = hyper_parms['classifier']
         
         layers = []
-        for i in range(self.n_leayers):
+        for i in range(self.n_layers):
             if i == 0:
                 layers.append(nn.Linear(self.input_size, self.hidden_size))
             else:
                 layers.append(nn.Linear(self.hidden_size, self.hidden_size))
-            layers.append(nn.Tanh())
+            if self.activation == 'relu':
+                layers.append(nn.ReLU())
+            elif self.activation == 'tanh':
+                layers.append(nn.Tanh())
+            elif self.activation == 'sigmoid':
+                layers.append(nn.Sigmoid())
+            else: 
+                raise ValueError('Activation function not supported.')
             layers.append(nn.Dropout(self.dropout))
         layers.append(nn.Linear(self.hidden_size, self.output_size))
+        if self.classifier:
+            layers.append(nn.Sigmoid())
         self.feedforward_nn = nn.Sequential(*layers)
     def forward(self, x, **kwargs):
         """
@@ -130,7 +140,7 @@ class MultilayerPerceptronClassifierStrategy(Strategy):
         layers, pointwise nonlinear functions, and dropout.
         """
         return self.feedforward_nn(x)
-    def train_batch(X, y, model, optimizer, criterion, **kwargs):
+    def train_batch(self, X, y, model, optimizer, criterion):
         """
         X (n_examples x n_features)
         y (n_examples): gold labels
@@ -155,7 +165,7 @@ class MultilayerPerceptronClassifierStrategy(Strategy):
         loss.backward() # Computes the gradient of the given tensor w.r.t. graph leaves 
         optimizer.step() # Updates weights and biases with the optimizer (SGD of ADAM)
         return loss.item()
-    def plot(epochs, plottable, ylabel='', title=''):
+    def plot(self, epochs, plottable, ylabel='', title=''):
         plt.clf()
         plt.xlabel('Epoch')
         plt.ylabel(ylabel)
@@ -166,7 +176,6 @@ class MultilayerPerceptronClassifierStrategy(Strategy):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         dataset = ThesisDataset(data)
         dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
-        test_X, test_y = dataset.X_test, dataset.y_test
         # initialize the model    
         self.model = self.feedforward_nn
         # get an optimizer
@@ -181,21 +190,21 @@ class MultilayerPerceptronClassifierStrategy(Strategy):
         # training loop
         epochs = torch.arange(1, self.epochs + 1)
         train_mean_losses = []
-        valid_accs = []
         train_losses = []
         for ii in epochs:
-            print('Training epoch {}'.format(ii))
+            # print('Training epoch {}'.format(ii))
             for X_batch, y_batch in dataloader:
-                # X = batch_size x 11, y = batch_size x 34
-                loss = self.train_batch(
-                    X_batch, y_batch, self.model, optimizer, criterion)
+                # 
+                # Print shapes of X_batch and y_batch
+                #print('X_batch shape: {}, y_batch shape: {}'.format(X_batch.shape, y_batch.shape))
+                # X = batch_size x 11, y = 34 x batch_size.
+                #print('X_batch shape: {}, y_batch shape: {}'.format(X_batch.shape, y_batch.shape))
+                loss = self.train_batch(X_batch, y_batch, self.model, optimizer, criterion)
                 train_losses.append(loss)
             mean_loss = torch.tensor(train_losses).mean().item()
-            print('Training loss: %.4f' % (mean_loss))
+            # print('Training loss: %.4f' % (mean_loss))
 
             train_mean_losses.append(mean_loss)
-        final_acc = self.evaluate(self.model, test_X, test_y)
-        print('Final Test acc: %.4f' % (self.evaluate(self.model, test_X, test_y)))
         # plot
         self.plot(epochs, train_mean_losses, ylabel='Loss', title='Loss(Epoch)')    
     def predict(self, data: dict) -> None:
