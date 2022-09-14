@@ -1,7 +1,7 @@
 params,value
 loss,deviance
-learning_rate,0.6311975807171595
-n_estimators,81
-subsample,0.981589184229811
-max_depth,10
-value,0.45011534919770996
+learning_rate,5.855120453201422e-07
+n_estimators,48
+subsample,0.1788614283682505
+max_depth,5
+value,0.4442471516469488

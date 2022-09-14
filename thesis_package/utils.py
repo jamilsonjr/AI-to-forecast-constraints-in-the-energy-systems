@@ -74,8 +74,9 @@ def deserialize_object(name, message=None):
 def split_and_suffle(X, y, test_size=0.2, scaling=False):
     le = LabelEncoder()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
-    X_train['season'] = le.fit_transform(X_train['season'])
-    X_test['season'] = le.fit_transform(X_test['season'])   
+    if 'season' in X_train.columns:
+        X_train['season'] = le.fit_transform(X_train['season'])
+        X_test['season'] = le.fit_transform(X_test['season'])   
     X_train, y_train = shuffle(X_train, y_train)
     if scaling:
         from sklearn.preprocessing import MaxAbsScaler

@@ -1,3 +1,5 @@
 params,value
-n_layers,1
-value,0.03574040774088045
+n_estimators,541
+learning_rate,0.7588641135769055
+loss,exponential
+value,0.5218303946263644

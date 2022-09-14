@@ -1,10 +1,10 @@
 params,value
-hidden_size,77
+hidden_size,87
 n_layers,1
-dropout,0.1942268077885917
-activation,tanh
+dropout,0.1489135585852697
+activation,relu
 optimizer,adam
-lr,0.004957123132399098
-epochs,62
-batch_size,16
-value,0.1936182295733655
+lr,0.0016140689727156942
+epochs,32
+batch_size,2
+value,0.15868909012505392

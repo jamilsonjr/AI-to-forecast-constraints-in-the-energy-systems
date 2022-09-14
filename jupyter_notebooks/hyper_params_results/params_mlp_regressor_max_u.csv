@@ -1,10 +1,10 @@
 params,value
-hidden_size,66
-n_layers,3
-dropout,0.34152692963360254
+hidden_size,27
+n_layers,2
+dropout,0.3562510433549009
 activation,relu
 optimizer,sgd
-lr,0.0035501312174389676
-epochs,55
-batch_size,64
-value,0.5959920753768438
+lr,0.0017545411149200204
+epochs,35
+batch_size,16
+value,3.930682106211903

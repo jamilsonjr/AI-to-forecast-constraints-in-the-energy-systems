@@ -1,7 +1,7 @@
 params,value
 loss,exponential
-learning_rate,0.08363472795701299
-n_estimators,80
-subsample,0.3056030047028318
-max_depth,5
-value,0.415922217007392
+learning_rate,0.20486184363043036
+n_estimators,62
+subsample,0.09442639147885001
+max_depth,4
+value,0.3849963009046306

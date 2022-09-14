@@ -1,0 +1,10 @@
+params,value
+hidden_size,22
+n_layers,1
+dropout,0.04490211985556538
+activation,tanh
+optimizer,sgd
+lr,0.00297550353899879
+epochs,20
+batch_size,64
+value,1.675396870643045
