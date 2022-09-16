@@ -37,11 +37,11 @@ class Metrics:
                     else: #_y_pred.iloc[i, j] < 0:
                         true_negatives_sse += _squared_error.iloc[i, j]
                         self.true_negatives_ctr += 1
-        compute_rmspe = lambda num, den: sqrt(num / den) if den != 0 else 0  
-        self.true_positives_rmspe = compute_rmspe(true_positives_sse, self.true_positives_ctr) 
-        self.false_positives_rmspe = compute_rmspe(false_positives_sse, self.false_positives_ctr)
-        self.false_negatives_rmspe = compute_rmspe(false_negatives_sse, self.false_negatives_ctr)
-        self.true_negatives_rmspe = compute_rmspe(true_negatives_sse, self.true_negatives_ctr)
+        compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
+        self.true_positives_rmspe = compute_rmse(true_positives_sse, self.true_positives_ctr) 
+        self.false_positives_rmspe = compute_rmse(false_positives_sse, self.false_positives_ctr)
+        self.false_negatives_rmspe = compute_rmse(false_negatives_sse, self.false_negatives_ctr)
+        self.true_negatives_rmspe = compute_rmse(true_negatives_sse, self.true_negatives_ctr)
         # Hybrid Metrics 
         self.true_positives_hybrid_error = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmspe)
         self.false_positives_hybrid_error = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_rmspe)
@@ -51,16 +51,16 @@ class Metrics:
             self.hybrid_recall = self.true_positives_hybrid_error / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error)
         else: 
             self.hybrid_recall = 0
-        if (self.false_positives_hybrid_error + self.true_negatives_hybrid_error) != 0:
-            self.hybrid_precision = self.false_positives_hybrid_error / (self.false_positives_hybrid_error + self.true_negatives_hybrid_error)
+        if (self.true_positives_hybrid_error + self.false_positives_hybrid_error) != 0:
+            self.hybrid_precision = self.true_positives_hybrid_error / (self.true_positives_hybrid_error + self.false_positives_hybrid_error)
         else:
             self.hybrid_precision = 0
-        if (self.hybrid_recall + self.hybrid_precision) != 0:
+        if (self.hybrid_precision + self.hybrid_recall) != 0:
             self.hybrid_f1 = 2 * (self.hybrid_precision * self.hybrid_recall) / (self.hybrid_precision + self.hybrid_recall)
         else:
             self.hybrid_f1 = 0
         if self.true_positives_hybrid_error + self.true_negatives_hybrid_error + self.false_positives_hybrid_error + self.false_negatives_hybrid_error != 0:
-            self.hybrid_accuracy = (self.true_positives_hybrid_error + self.true_negatives_hybrid_error) / (self.true_positives_hybrid_error + self.true_negatives_hybrid_error)
+            self.hybrid_accuracy = (self.true_positives_hybrid_error + self.true_negatives_hybrid_error) / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error + self.true_negatives_hybrid_error + self.false_positives_hybrid_error)
         else:
             self.hybrid_accuracy = 0
         # Normal metrics
@@ -87,7 +87,6 @@ class Metrics:
             self.f1_score = 2 * (self.precision * self.recall) / (self.precision + self.recall)
         else:
             self.f1_score = 0
-        
     def print_report(self):
         # Print the above results.
         print('Hybrid Metrics: \n')
@@ -116,9 +115,7 @@ class Metrics:
         print('Accuracy:', self.accuracy)
         print('Precision:', self.precision)
         print('F1 score:', self.f1_score)
-        
-        
-        
+
     def plot_series(self, series1, series2, threshold=None, title=None):
         plt.figure(figsize=(25,8))
         plt.plot(series1, label='Ground truth')
