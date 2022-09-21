@@ -1,6 +1,6 @@
 params,value
-kernel,rbf
-C,0.013082222897896132
-degree,5
-gamma,0.0003375702707829116
+kernel,poly
+C,0.000133583886435618
+degree,2
+gamma,0.0004938586327866807
 value,0.0
