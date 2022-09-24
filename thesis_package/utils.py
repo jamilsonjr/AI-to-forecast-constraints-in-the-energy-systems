@@ -2,6 +2,7 @@ import os
 import datetime 
 import pickle
 import pandas as pd
+import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -104,3 +105,7 @@ def convert_df_to_bool(df):
     return df
 
 cols_with_positive_values = lambda df: [col for col in df.columns if df[col].any()]
+
+def compute_threshold(df):
+    X_train, X_test, y_train, y_test = split_and_suffle(pd.DataFrame(np.ones((df.shape[0],10))), df)
+    return min(0.0025, y_test.loc[:, y_test.max(axis=0) != 0].max(axis=0).mean() * 0.10)
