@@ -1,0 +1,12 @@
+params,value
+booster,gbtree
+lambda,6.67494458821728e-05
+alpha,0.0011462621715778584
+subsample,0.37549129998363046
+colsample_bytree,0.352657521908247
+max_depth,7
+min_child_weight,7
+eta,6.042421685210189e-08
+gamma,0.16904102993548104
+grow_policy,depthwise
+value,0.16877222622790364
