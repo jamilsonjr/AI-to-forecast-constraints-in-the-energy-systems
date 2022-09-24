@@ -1,0 +1,5 @@
+params,value
+n_estimators,350
+learning_rate,0.6975130866694168
+loss,log_loss
+value,0.8020559107433871

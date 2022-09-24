@@ -1,5 +1,5 @@
 params,value
-n_estimators,151
-learning_rate,0.10018058609990134
+n_estimators,17
+learning_rate,0.437553692020767
 loss,squared_error
-value,0.5607221182696422
+value,0.5372448946473833

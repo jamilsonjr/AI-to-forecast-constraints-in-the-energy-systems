@@ -211,7 +211,7 @@ class MultilayerPerceptronStrategy(Strategy):
         test_X = data['X_test']
         X_test = torch.from_numpy(test_X.values).float()
         scores = self.model(X_test)  # (n_examples x n_classes)
-        return scores.detach().numpy() 
+        return scores.detach().numpy().round().astype(bool)
 
 ##############################################################################
 ############################### Datasets #####################################
