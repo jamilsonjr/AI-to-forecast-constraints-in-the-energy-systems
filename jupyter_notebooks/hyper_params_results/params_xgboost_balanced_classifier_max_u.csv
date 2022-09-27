@@ -1,0 +1,16 @@
+params,value
+booster,dart
+lambda,0.00015884090078506437
+alpha,0.19774958488491742
+subsample,0.7634517553183634
+colsample_bytree,0.824966208242803
+max_depth,5
+min_child_weight,8
+eta,0.1039306615628526
+gamma,0.6835098793603533
+grow_policy,depthwise
+sample_type,uniform
+normalize_type,tree
+rate_drop,4.7305061368641385e-05
+skip_drop,4.6864756927258716e-05
+value,0.665520355433705

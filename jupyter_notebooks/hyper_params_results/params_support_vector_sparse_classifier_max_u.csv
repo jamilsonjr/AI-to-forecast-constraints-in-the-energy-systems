@@ -1,0 +1,6 @@
+params,value
+kernel,rbf
+C,3.277034979078225e-06
+degree,2
+gamma,6.524079612801282e-05
+value,0.0
