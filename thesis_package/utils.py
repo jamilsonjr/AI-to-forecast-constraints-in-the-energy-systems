@@ -72,25 +72,50 @@ def deserialize_object(name, message=None):
     return result
 
 # Scaling reference here https://www.atoti.io/articles/when-to-perform-a-feature-scaling/
+# def split_and_suffle(X, y, test_size=0.2, scaling=False):
+#     le = LabelEncoder()
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
+#     if 'season' in X_train.columns:
+#         X_train['season'] = le.fit_transform(X_train['season'])
+#         X_test['season'] = le.fit_transform(X_test['season'])   
+#     X_train, y_train = shuffle(X_train, y_train)
+#     if scaling:
+#         from sklearn.preprocessing import MaxAbsScaler
+#         scaler = {
+#             'X_train': MaxAbsScaler(),
+#             'X_test': MaxAbsScaler(),
+#             'y_train': MaxAbsScaler(),
+#             'y_test': MaxAbsScaler()
+#         }
+#         X_train = scaler['X_train'].fit_transform(X_train)
+#         X_test = scaler['X_test'].fit_transform(X_test)
+#         y_train = scaler['y_train'].fit_transform(y_train)
+#         y_test = scaler['y_test'].fit_transform(y_test)
+#     X_train = pd.DataFrame(X_train, columns=X.columns)
+#     X_test = pd.DataFrame(X_test, columns=X.columns)                          
+#     y_train = pd.DataFrame(y_train, columns=y.columns)
+#     y_test = pd.DataFrame(y_test, columns=y.columns)
+#     if scaling:
+#         return X_train, X_test, y_train, y_test, scaler                      
+#     else: 
+#         return X_train, X_test, y_train, y_test
 def split_and_suffle(X, y, test_size=0.2, scaling=False):
     le = LabelEncoder()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
     if 'season' in X_train.columns:
         X_train['season'] = le.fit_transform(X_train['season'])
         X_test['season'] = le.fit_transform(X_test['season'])   
-    X_train, y_train = shuffle(X_train, y_train)
     if scaling:
         from sklearn.preprocessing import MaxAbsScaler
         scaler = {
-            'X_train': MaxAbsScaler(),
-            'X_test': MaxAbsScaler(),
-            'y_train': MaxAbsScaler(),
-            'y_test': MaxAbsScaler()
-        }
-        X_train = scaler['X_train'].fit_transform(X_train)
-        X_test = scaler['X_test'].fit_transform(X_test)
-        y_train = scaler['y_train'].fit_transform(y_train)
-        y_test = scaler['y_test'].fit_transform(y_test)
+            'X': MaxAbsScaler(),
+            'y': MaxAbsScaler()
+            } 
+        X_train = scaler['X'].fit_transform(X_train)
+        X_test = scaler['X'].fit_transform(X_test)
+        y_train = scaler['y'].fit_transform(y_train)
+        y_test = scaler['y'].fit_transform(y_test)
+    X_train, y_train = shuffle(X_train, y_train)
     X_train = pd.DataFrame(X_train, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)                          
     y_train = pd.DataFrame(y_train, columns=y.columns)
@@ -99,13 +124,31 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
         return X_train, X_test, y_train, y_test, scaler                      
     else: 
         return X_train, X_test, y_train, y_test
+def unscale_df(df, scaler):
+    return pd.DataFrame(scaler.inverse_transform(df), columns=df.columns)
 def convert_df_to_bool(df):
     for col in df.columns:
         df[col] = df[col].astype(bool)
     return df
 
 cols_with_positive_values = lambda df: [col for col in df.columns if df[col].any()]
-
+# threshold related
 def compute_threshold(df):
     X_train, X_test, y_train, y_test = split_and_suffle(pd.DataFrame(np.ones((df.shape[0],10))), df)
     return min(0.0025, y_test.loc[:, y_test.max(axis=0) != 0].max(axis=0).mean() * 0.10)
+def check_positive_count(reg_data, class_data, threshold, experiment='max_u'):
+    print('Positive count in classification data', experiment, ':', count_positives_class(class_data))
+    print('Positive count in regression data', experiment, 'with threshold', threshold, ':', count_positives_reg(reg_data, threshold))
+    print('\n')
+def check_negative_count(reg_data, class_data, threshold, experiment='max_u'):
+    print('Negative count in classification data', experiment, ':', class_data.shape[0] * class_data.shape[1] - class_data.sum().sum())
+    print('Negative count in regression data', experiment, 'with threshold', threshold, ':', count_negatives_reg(reg_data, threshold))
+    print('\n')
+def count_positives_class(class_data):
+    return class_data.sum().sum()
+def count_negatives_class(class_data):
+    return class_data.shape[0] * class_data.shape[1] - class_data.sum().sum()
+def count_positives_reg(reg_data, threshold):
+    return reg_data[reg_data > threshold].count().sum()
+def count_negatives_reg(reg_data, threshold):
+    return reg_data[reg_data < threshold].count().sum()
