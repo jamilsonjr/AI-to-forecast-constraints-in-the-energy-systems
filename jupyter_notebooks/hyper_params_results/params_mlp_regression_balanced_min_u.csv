@@ -1,0 +1,11 @@
+params,value
+hidden_size,79
+n_layers,3
+dropout,0.3037768168799529
+activation,relu
+optimizer,sgd
+lr,0.0017966498130340496
+epochs,59
+batch_size,1024
+classifier,False
+value,0.9565453113178017
