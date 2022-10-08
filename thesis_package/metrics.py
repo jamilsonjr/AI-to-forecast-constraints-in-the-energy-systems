@@ -38,15 +38,15 @@ class Metrics:
                         true_negatives_sse += _squared_error.iloc[i, j]
                         self.true_negatives_ctr += 1
         compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
-        self.true_positives_rmspe = compute_rmse(true_positives_sse, self.true_positives_ctr) 
-        self.false_positives_rmspe = compute_rmse(false_positives_sse, self.false_positives_ctr)
-        self.false_negatives_rmspe = compute_rmse(false_negatives_sse, self.false_negatives_ctr)
-        self.true_negatives_rmspe = compute_rmse(true_negatives_sse, self.true_negatives_ctr)
+        self.true_positives_rmse = compute_rmse(true_positives_sse, self.true_positives_ctr) 
+        self.false_positives_rmse = compute_rmse(false_positives_sse, self.false_positives_ctr)
+        self.false_negatives_rmse = compute_rmse(false_negatives_sse, self.false_negatives_ctr)
+        self.true_negatives_rmse = compute_rmse(true_negatives_sse, self.true_negatives_ctr)
         # Hybrid Metrics 
-        self.true_positives_hybrid_error = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmspe)
-        self.false_positives_hybrid_error = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_rmspe)
-        self.false_negatives_hybrid_error = self.false_negatives_ctr - (self.false_negatives_ctr * self.false_negatives_rmspe)
-        self.true_negatives_hybrid_error = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_rmspe)
+        self.true_positives_hybrid_error = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmse)
+        self.false_positives_hybrid_error = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_rmse)
+        self.false_negatives_hybrid_error = self.false_negatives_ctr - (self.false_negatives_ctr * self.false_negatives_rmse)
+        self.true_negatives_hybrid_error = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_rmse)
         if (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) != 0:
             self.hybrid_recall = self.true_positives_hybrid_error / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error)
         else: 
@@ -90,10 +90,10 @@ class Metrics:
     def print_report(self):
         # Print the above results.
         print('Hybrid Metrics: \n')
-        print('True positives RMSPE:', self.true_positives_rmspe)
-        print('False positives RMSPE:', self.false_positives_rmspe)
-        print('False negatives RMSPE:', self.false_negatives_rmspe)
-        print('True negatives RMSPE:', self.true_negatives_rmspe)
+        print('True positives RMSPE:', self.true_positives_rmse)
+        print('False positives RMSPE:', self.false_positives_rmse)
+        print('False negatives RMSPE:', self.false_negatives_rmse)
+        print('True negatives RMSPE:', self.true_negatives_rmse)
         print('\n')
         print('True positives hybrid error:', self.true_positives_hybrid_error)
         print('False positives hybrid error:', self.false_positives_hybrid_error)
