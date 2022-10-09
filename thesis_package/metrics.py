@@ -63,6 +63,9 @@ class Metrics:
             self.hybrid_accuracy = (self.true_positives_hybrid_error + self.true_negatives_hybrid_error) / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error + self.true_negatives_hybrid_error + self.false_positives_hybrid_error)
         else:
             self.hybrid_accuracy = 0
+        # MCC
+        if (self.true_positives_hybrid_error + self.false_positives_hybrid_error) * (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_positives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_negatives_hybrid_error) > 0:
+            self.hybrid_mcc = (self.true_positives_hybrid_error * self.true_negatives_hybrid_error - self.false_positives_hybrid_error * self.false_negatives_hybrid_error) / sqrt((self.true_positives_hybrid_error + self.false_positives_hybrid_error) * (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_positives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_negatives_hybrid_error))
         # Normal metrics
         # Precision, recall, accuracy, f1 score.
         if (self.true_positives_ctr + self.false_negatives_ctr) != 0:
