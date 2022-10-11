@@ -116,10 +116,10 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
         y_train = y_train / scaler['y']
         y_test = y_test / scaler['y']
     X_train, y_train = shuffle(X_train, y_train)
-    X_train = pd.DataFrame(X_train, columns=X.columns)
-    X_test = pd.DataFrame(X_test, columns=X.columns)                          
-    y_train = pd.DataFrame(y_train, columns=y.columns)
-    y_test = pd.DataFrame(y_test, columns=y.columns)
+    X_train = pd.DataFrame(X_train, columns=X.columns).reset_index(drop=True)
+    X_test = pd.DataFrame(X_test, columns=X.columns).reset_index(drop=True)
+    y_train = pd.DataFrame(y_train, columns=y.columns).reset_index(drop=True)
+    y_test = pd.DataFrame(y_test, columns=y.columns).reset_index(drop=True)
     if scaling:
         return X_train, X_test, y_train, y_test, scaler                      
     else: 

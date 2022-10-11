@@ -1,0 +1,11 @@
+params,value
+hidden_size,13
+n_layers,1
+dropout,0.24823358356406988
+activation,sigmoid
+optimizer,adam
+lr,0.009831523214724544
+epochs,46
+batch_size,16
+classifier,True
+value,0.1639169654562676
