@@ -109,12 +109,12 @@ def split_and_suffle(X, y, test_size=0.2, scaling=False):
         from sklearn.preprocessing import MaxAbsScaler
         scaler = {
             'X': MaxAbsScaler(),
-            'y': MaxAbsScaler()
+            'y': y.max().max()
             } 
         X_train = scaler['X'].fit_transform(X_train)
         X_test = scaler['X'].fit_transform(X_test)
-        y_train = scaler['y'].fit_transform(y_train)
-        y_test = scaler['y'].fit_transform(y_test)
+        y_train = y_train / scaler['y']
+        y_test = y_test / scaler['y']
     X_train, y_train = shuffle(X_train, y_train)
     X_train = pd.DataFrame(X_train, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)                          
