@@ -24,29 +24,37 @@ class Metrics:
         self.false_negatives_ctr = 0
         true_negatives_sse = 0
         self.true_negatives_ctr = 0
+        true_positives_sum_abs_error = 0
+        true_positives_sum_sum_abs = 0
+        false_negatives_sum_abs_error = 0
+        false_negatives_sum_sum_abs = 0
+        false_positives_sum_abs_error = 0
+        false_positives_sum_sum_abs = 0
+        true_negatives_sum_abs_error = 0
+        true_negatives_sum_sum_abs = 0
         for i in range(_y_test_minus_threshold.shape[0]):
             for j in range(_y_test_minus_threshold.shape[1]):
                 if _y_test_minus_threshold.iloc[i, j] > 0:
                     if _y_pred_minus_threshold.iloc[i, j] > 0:
                         true_positives_sse += _squared_error.iloc[i, j]
-                        true_positives_sum_abs_error += _abs_error[i, j]
-                        true_positives_sum_sum_abs += _sum_abs[i, j]
+                        true_positives_sum_abs_error += _abs_error.iloc[i, j]
+                        true_positives_sum_sum_abs += _sum_abs.iloc[i, j]
                         self.true_positives_ctr += 1
                     else: #_y_pred.iloc[i, j] < 0:
                         false_negatives_sse += _squared_error.iloc[i, j]
-                        false_negatives_sum_abs_error += _abs_error[i, j]
-                        false_negatives_sum_sum_abs += _sum_abs[i, j]
+                        false_negatives_sum_abs_error += _abs_error.iloc[i, j]
+                        false_negatives_sum_sum_abs += _sum_abs.iloc[i, j]
                         self.false_negatives_ctr += 1
                 else: #_y_test.iloc[i, j] < 0
                     if _y_pred_minus_threshold.iloc[i, j] > 0:
                         false_positives_sse += _squared_error.iloc[i, j]
-                        false_positives_sum_abs_error += _abs_error[i, j]
-                        false_positives_sum_sum_abs += _sum_abs[i, j]
+                        false_positives_sum_abs_error += _abs_error.iloc[i, j]
+                        false_positives_sum_sum_abs += _sum_abs.iloc[i, j]
                         self.false_positives_ctr += 1
                     else: #_y_pred.iloc[i, j] < 0:
                         true_negatives_sse += _squared_error.iloc[i, j]
-                        true_negatives_sum_abs_error += _abs_error[i, j]
-                        true_negatives_sum_sum_abs += _sum_abs[i, j]
+                        true_negatives_sum_abs_error += _abs_error.iloc[i, j]
+                        true_negatives_sum_sum_abs += _sum_abs.iloc[i, j]
                         self.true_negatives_ctr += 1
         # rmse
         compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
@@ -75,7 +83,7 @@ class Metrics:
         compute_precision = lambda tp, fp: tp / (tp + fp) if (tp + fp) != 0 else 0
         compute_f1 = lambda recall, precision: 2 * ((recall * precision) / (recall + precision)) if (recall + precision) != 0 else 0
         compute_accuracy = lambda tp, tn, fp, fn: (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) != 0 else 0
-        compute_mcc = lambda tp, tn, fp, fn: ((tp * tn) - (fp * fn)) / sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) if (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) != 0 else 0
+        compute_mcc = lambda tp, tn, fp, fn: ((tp * tn) - (fp * fn)) / sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) if (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) > 0 else 0
         # Hybrid Metrics w/ rmse
         self.hybrid_recall_rmse = compute_recall(self.hybrid_true_positives_rmse, self.hybrid_false_negatives_rmse)
         self.hybrid_precision_rmse = compute_precision(self.hybrid_true_positives_rmse, self.hybrid_false_positives_rmse)
