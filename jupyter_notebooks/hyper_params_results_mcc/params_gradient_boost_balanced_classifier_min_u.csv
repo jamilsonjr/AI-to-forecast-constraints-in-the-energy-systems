@@ -1,5 +1,5 @@
 params,value
-n_estimators,15
-learning_rate,0.21717377664731222
-loss,deviance
-value,0.16523913541855928
+n_estimators,73
+learning_rate,0.34214914491271425
+loss,exponential
+value,0.5275158526712136

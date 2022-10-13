@@ -1,5 +1,5 @@
 params,value
-n_estimators,10
-learning_rate,0.18165609064051763
-loss,log_loss
-value,0.5370944821083834
+n_estimators,12
+learning_rate,0.31841154564479685
+loss,deviance
+value,0.5919063880540413

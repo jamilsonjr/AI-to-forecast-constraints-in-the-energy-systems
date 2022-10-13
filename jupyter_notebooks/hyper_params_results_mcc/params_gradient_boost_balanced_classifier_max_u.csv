@@ -1,5 +1,5 @@
 params,value
-n_estimators,36
-learning_rate,0.10212162025821997
+n_estimators,326
+learning_rate,0.3540980013262063
 loss,exponential
-value,0.10999831150703601
+value,0.6000922812985082

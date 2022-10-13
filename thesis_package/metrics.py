@@ -12,7 +12,10 @@ class Metrics:
         # Computation.
         _y_test_minus_threshold = y_test.reset_index(drop=True) - threshold
         _y_pred_minus_threshold = y_pred - threshold
-        _squared_error = (_y_test_minus_threshold - _y_pred_minus_threshold) ** 2
+        _error = (_y_test_minus_threshold - _y_pred_minus_threshold)
+        _abs_error = abs(_error)
+        _sum_abs = abs(_y_test_minus_threshold) + abs(_y_pred_minus_threshold)
+        _squared_error = _error ** 2
         true_positives_sse = 0
         self.true_positives_ctr = 0
         false_positives_sse = 0
@@ -26,72 +29,71 @@ class Metrics:
                 if _y_test_minus_threshold.iloc[i, j] > 0:
                     if _y_pred_minus_threshold.iloc[i, j] > 0:
                         true_positives_sse += _squared_error.iloc[i, j]
+                        true_positives_sum_abs_error += _abs_error[i, j]
+                        true_positives_sum_sum_abs += _sum_abs[i, j]
                         self.true_positives_ctr += 1
                     else: #_y_pred.iloc[i, j] < 0:
                         false_negatives_sse += _squared_error.iloc[i, j]
+                        false_negatives_sum_abs_error += _abs_error[i, j]
+                        false_negatives_sum_sum_abs += _sum_abs[i, j]
                         self.false_negatives_ctr += 1
                 else: #_y_test.iloc[i, j] < 0
                     if _y_pred_minus_threshold.iloc[i, j] > 0:
                         false_positives_sse += _squared_error.iloc[i, j]
+                        false_positives_sum_abs_error += _abs_error[i, j]
+                        false_positives_sum_sum_abs += _sum_abs[i, j]
                         self.false_positives_ctr += 1
                     else: #_y_pred.iloc[i, j] < 0:
                         true_negatives_sse += _squared_error.iloc[i, j]
+                        true_negatives_sum_abs_error += _abs_error[i, j]
+                        true_negatives_sum_sum_abs += _sum_abs[i, j]
                         self.true_negatives_ctr += 1
+        # rmse
         compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
         self.true_positives_rmse = compute_rmse(true_positives_sse, self.true_positives_ctr) 
         self.false_positives_rmse = compute_rmse(false_positives_sse, self.false_positives_ctr)
         self.false_negatives_rmse = compute_rmse(false_negatives_sse, self.false_negatives_ctr)
         self.true_negatives_rmse = compute_rmse(true_negatives_sse, self.true_negatives_ctr)
-        # Hybrid Metrics 
-        self.true_positives_hybrid_error = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmse)
-        self.false_positives_hybrid_error = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_rmse)
-        self.false_negatives_hybrid_error = self.false_negatives_ctr - (self.false_negatives_ctr * self.false_negatives_rmse)
-        self.true_negatives_hybrid_error = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_rmse)
-        if (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) != 0:
-            self.hybrid_recall = self.true_positives_hybrid_error / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error)
-        else: 
-            self.hybrid_recall = 0
-        if (self.true_positives_hybrid_error + self.false_positives_hybrid_error) != 0:
-            self.hybrid_precision = self.true_positives_hybrid_error / (self.true_positives_hybrid_error + self.false_positives_hybrid_error)
-        else:
-            self.hybrid_precision = 0
-        if (self.hybrid_precision + self.hybrid_recall) != 0:
-            self.hybrid_f1 = 2 * (self.hybrid_precision * self.hybrid_recall) / (self.hybrid_precision + self.hybrid_recall)
-        else:
-            self.hybrid_f1 = 0
-        if self.true_positives_hybrid_error + self.true_negatives_hybrid_error + self.false_positives_hybrid_error + self.false_negatives_hybrid_error != 0:
-            self.hybrid_accuracy = (self.true_positives_hybrid_error + self.true_negatives_hybrid_error) / (self.true_positives_hybrid_error + self.false_negatives_hybrid_error + self.true_negatives_hybrid_error + self.false_positives_hybrid_error)
-        else:
-            self.hybrid_accuracy = 0
-        # MCC
-        if (self.true_positives_hybrid_error + self.false_positives_hybrid_error) * (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_positives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_negatives_hybrid_error) > 0:
-            self.hybrid_mcc = (self.true_positives_hybrid_error * self.true_negatives_hybrid_error - self.false_positives_hybrid_error * self.false_negatives_hybrid_error) / sqrt((self.true_positives_hybrid_error + self.false_positives_hybrid_error) * (self.true_positives_hybrid_error + self.false_negatives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_positives_hybrid_error) * (self.true_negatives_hybrid_error + self.false_negatives_hybrid_error))
-        else: 
-            self.hybrid_mcc = 0
+        # smape
+        compute_smape = lambda num, den, ctr:  (1/ctr) * (num / den) if den != 0 else 0
+        self.true_positives_smape = compute_smape(true_positives_sum_abs_error, true_positives_sum_sum_abs, self.true_positives_ctr)
+        self.false_positives_smape = compute_smape(false_positives_sum_abs_error, false_positives_sum_sum_abs, self.false_positives_ctr)
+        self.false_negatives_smape = compute_smape(false_negatives_sum_abs_error, false_negatives_sum_sum_abs, self.false_negatives_ctr)
+        self.true_negatives_smape = compute_smape(true_negatives_sum_abs_error, true_negatives_sum_sum_abs, self.true_negatives_ctr)
+        # Hybrid Metrics w/ rmse
+        self.hybrid_true_positives_rmse = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmse)
+        self.hybrid_true_negatives_rmse = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_rmse)
+        self.hybrid_false_positives_rmse = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_rmse)
+        self.hybrid_false_negatives_rmse = self.false_negatives_ctr - (self.false_negatives_ctr * self.false_negatives_rmse)
+        # Hybrid Metrics w/ smape
+        self.hybrid_true_positives_smape = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_smape)
+        self.hybrid_true_negatives_smape = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_smape)
+        self.hybrid_false_positives_smape = self.false_positives_ctr - (self.false_positives_ctr * self.false_positives_smape)
+        self.hybrid_false_negatives_smape = self.false_negatives_ctr - (self.false_negatives_ctr * self.false_negatives_smape)
+        # Hybrid Metrics
+        compute_recall = lambda tp, fn: tp / (tp + fn) if (tp + fn) != 0 else 0
+        compute_precision = lambda tp, fp: tp / (tp + fp) if (tp + fp) != 0 else 0
+        compute_f1 = lambda recall, precision: 2 * ((recall * precision) / (recall + precision)) if (recall + precision) != 0 else 0
+        compute_accuracy = lambda tp, tn, fp, fn: (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) != 0 else 0
+        compute_mcc = lambda tp, tn, fp, fn: ((tp * tn) - (fp * fn)) / sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) if (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) != 0 else 0
+        # Hybrid Metrics w/ rmse
+        self.hybrid_recall_rmse = compute_recall(self.hybrid_true_positives_rmse, self.hybrid_false_negatives_rmse)
+        self.hybrid_precision_rmse = compute_precision(self.hybrid_true_positives_rmse, self.hybrid_false_positives_rmse)
+        self.hybrid_f1_rmse = compute_f1(self.hybrid_recall_rmse, self.hybrid_precision_rmse)
+        self.hybrid_accuracy_rmse = compute_accuracy(self.hybrid_true_positives_rmse, self.hybrid_true_negatives_rmse, self.hybrid_false_positives_rmse, self.hybrid_false_negatives_rmse)
+        self.hybrid_mcc_rmse = compute_mcc(self.hybrid_true_positives_rmse, self.hybrid_true_negatives_rmse, self.hybrid_false_positives_rmse, self.hybrid_false_negatives_rmse)
+        # Hybrid Metrics w/ smape
+        self.hybrid_recall_smape = compute_recall(self.hybrid_true_positives_smape, self.hybrid_false_negatives_smape)
+        self.hybrid_precision_smape = compute_precision(self.hybrid_true_positives_smape, self.hybrid_false_positives_smape)
+        self.hybrid_f1_smape = compute_f1(self.hybrid_recall_smape, self.hybrid_precision_smape)
+        self.hybrid_accuracy_smape = compute_accuracy(self.hybrid_true_positives_smape, self.hybrid_true_negatives_smape, self.hybrid_false_positives_smape, self.hybrid_false_negatives_smape)
+        self.hybrid_mcc_smape = compute_mcc(self.hybrid_true_positives_smape, self.hybrid_true_negatives_smape, self.hybrid_false_positives_smape, self.hybrid_false_negatives_smape)
         # Normal metrics
-        # Precision, recall, accuracy, f1 score.
-        if (self.true_positives_ctr + self.false_negatives_ctr) != 0:
-            self.recall = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_negatives_ctr)
-        else:
-            self.recall = 0
-        # print('Recall:', self.recall, '\n', 'TP: {}, FN: {}'.format(self.true_positives_ctr, self.false_negatives_ctr))
-        # Compute accuracy from the above results.
-        if self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr != 0:
-            self.accuracy = (self.true_positives_ctr + self.true_negatives_ctr) / (self.true_positives_ctr + self.true_negatives_ctr + self.false_positives_ctr + self.false_negatives_ctr)
-        else:
-            self.accuracy = 0
-        # print('Accuracy:', self.accuracy, '\n', 'TP: {}, FP: {}, TN: {}, FN: {}'.format(self.true_positives_ctr, self.false_positives_ctr, self.true_negatives_ctr, self.false_negatives_ctr))
-        # Compute precision of the above results.
-        if self.true_positives_ctr + self.false_positives_ctr != 0:
-            self.precision = (self.true_positives_ctr) / (self.true_positives_ctr + self.false_positives_ctr)
-        else: 
-            self.precision = 0
-        # print('Precision:', self.precision, '\n', 'TP: {}, FP: {}'.format(self.true_positives_ctr, self.false_positives_ctr))
-        # Compute F1 score from the above results.
-        if self.precision + self.recall != 0:
-            self.f1_score = 2 * (self.precision * self.recall) / (self.precision + self.recall)
-        else:
-            self.f1_score = 0
+        self.recall = compute_recall(self.true_positives_ctr, self.false_negatives_ctr)
+        self.precision = compute_precision(self.true_positives_ctr, self.false_positives_ctr)
+        self.f1 = compute_f1(self.recall, self.precision)
+        self.accuracy = compute_accuracy(self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr)
+        self.mcc = compute_mcc(self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr)
     def print_report(self):
         # Print the above results.
         print('Hybrid Metrics: \n')
@@ -100,10 +102,10 @@ class Metrics:
         print('False negatives RMSPE:', self.false_negatives_rmse)
         print('True negatives RMSPE:', self.true_negatives_rmse)
         print('\n')
-        print('True positives hybrid error:', self.true_positives_hybrid_error)
-        print('False positives hybrid error:', self.false_positives_hybrid_error)
-        print('False negatives hybrid error:', self.false_negatives_hybrid_error)
-        print('True negatives hybrid error:', self.true_negatives_hybrid_error)
+        print('True positives hybrid error:', self.hybrid_true_positives_rmse)
+        print('False positives hybrid error:', self.hybrid_false_positives_rmse)
+        print('False negatives hybrid error:', self.hybrid_false_negatives_rmse)
+        print('True negatives hybrid error:', self.hybrid_true_negatives_rmse)
         print('\n')
         print('Hybrid recall:', self.hybrid_recall)
         print('Hybrid precision:', self.hybrid_precision)

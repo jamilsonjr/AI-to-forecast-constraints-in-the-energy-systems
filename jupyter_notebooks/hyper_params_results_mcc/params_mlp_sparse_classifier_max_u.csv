@@ -1,11 +1,11 @@
 params,value
-hidden_size,45
+hidden_size,96
 n_layers,2
-dropout,0.4731106329819501
+dropout,0.013655349449629942
 activation,tanh
 optimizer,adam
-lr,0.0004104031323200613
-epochs,48
-batch_size,1
+lr,0.00019771529138577486
+epochs,35
+batch_size,64
 classifier,True
-value,0.155080975973603
+value,0.1944307654928048
