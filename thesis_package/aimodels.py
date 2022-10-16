@@ -1,8 +1,11 @@
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
+
 ##############################################################################
 ######################## Strategy Design Pattern #############################
 ##############################################################################
@@ -39,7 +42,13 @@ class LinearRegressionStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        prediction = np.clip(self.model.predict(data['X_test']), 0, 1)
+        try: 
+            return pd.DataFrame(prediction, columns=data['y_test'].columns)
+        except: 
+            return prediction
+        
+        
 
 # Implement Multi Output Gradient Boost Regressor Strategy Class using sklearn.
 from sklearn import ensemble
@@ -50,7 +59,11 @@ class GradientBoostRegressorStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        prediction = np.clip(self.model.predict(data['X_test']), 0, 1)
+        try: 
+            return pd.DataFrame(prediction, columns=data['y_test'].columns)
+        except: 
+            return prediction
 
 # Implement Multi Ooutput XGBoost Regressor Strategy Class using sklearn and xgboost.
 import xgboost as xgb
@@ -60,7 +73,11 @@ class XGBoostRegressorStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        prediction = np.clip(self.model.predict(data['X_test']), 0, 1)
+        try: 
+            return pd.DataFrame(prediction, columns=data['y_test'].columns)
+        except: 
+            return prediction
 
 # Implement Multi Ooutput Support Vector Regressor Strategy Class using sklearn.
 from sklearn import svm
@@ -70,7 +87,11 @@ class SupportVectorRegressorStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        prediction = np.clip(self.model.predict(data['X_test']), 0, 1)
+        try: 
+            return pd.DataFrame(prediction, columns=data['y_test'].columns)
+        except: 
+            return prediction
 
 ##############################################################################
 ############################## Classifiers ###################################
@@ -82,7 +103,7 @@ class XGBoostClassifierStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        return pd.DataFrame(self.model.predict(data['X_test']), columns=data['y_test'].columns)
 # Implement Multi Ooutput Support Vector Classifier Strategy Class using sklearn.
 class SupportVectorClassifierStrategy(Strategy):
     def __init__(self, hyper_parms: dict) -> None:
@@ -90,7 +111,7 @@ class SupportVectorClassifierStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        return pd.DataFrame(self.model.predict(data['X_test']), columns=data['y_test'].columns)
 
 class GradientBoostClassifierStrategy(Strategy):
     def __init__(self, hyper_parms: dict) -> None:
@@ -98,7 +119,7 @@ class GradientBoostClassifierStrategy(Strategy):
     def fit(self, data: dict) -> None:
         self.model.fit(data['X_train'], data['y_train'])
     def predict(self, data: dict) -> None:
-        return self.model.predict(data['X_test'])
+        return pd.DataFrame(self.model.predict(data['X_test']), columns=data['y_test'].columns)
 class MultilayerPerceptronStrategy(Strategy):
     def __init__(self, hyper_parms: dict) -> None:
         self.output_size = hyper_parms['output_size']
@@ -203,7 +224,6 @@ class MultilayerPerceptronStrategy(Strategy):
                 train_losses.append(loss)
             mean_loss = torch.tensor(train_losses).mean().item()
             # print('Training loss: %.4f' % (mean_loss))
-
             train_mean_losses.append(mean_loss)
         # plot
         self.plot(epochs, train_mean_losses, ylabel='Loss', title='Loss(Epoch)')    
@@ -212,10 +232,14 @@ class MultilayerPerceptronStrategy(Strategy):
         X_test = torch.from_numpy(test_X.values).float()
         scores = self.model(X_test)  # (n_examples x n_classes)
         if self.classifier:
-            return scores.detach().numpy().round().astype(bool)
+            prediction = scores.detach().numpy().round()
+            return pd.DataFrame(prediction, columns=data['y_test'].columns)
         else: 
-            return scores.detach().numpy()
-
+            prediction = np.clip(scores.detach().numpy(), 0, 1)
+            try:
+                return pd.DataFrame(prediction, columns=data['y_test'].columns)
+            except:
+                return prediction
 ##############################################################################
 ############################### Datasets #####################################
 ##############################################################################

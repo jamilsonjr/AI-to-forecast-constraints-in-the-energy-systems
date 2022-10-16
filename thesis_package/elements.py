@@ -4,6 +4,7 @@ import pandas as pd
 import pandapower as pp
 from pandapower.plotting.plotly import simple_plotly
 from pandapower.plotting.plotly import pf_res_plotly
+import numpy as np
 from abc import ABC, abstractmethod
 from thesis_package import extractor as ex, utils as ut
 ##############################################################################
@@ -280,13 +281,12 @@ class Network:
         # Multiply the normalized value by the installed capacity of the generator.
         for generator in self.generator_list:
             if generator.type_of_generator == 'PV':
-                new_profile = pv_generation_profile['normalized_value'] * generator.p_max_kw
-                generator.p_real_kw = new_profile 
+                new_profile = pv_generation_profile['normalized_value'] * generator.p_max_kw 
+                generator.p_real_kw = new_profile * np.random.uniform(0.85, 1.15, new_profile.shape)
             elif generator.type_of_generator == 'Wind':
-                new_profile = wind_generation_profile['normalized_value'] * generator.p_max_kw
-                generator.p_real_kw = new_profile 
+                new_profile = wind_generation_profile['normalized_value'] * generator.p_max_kw 
+                generator.p_real_kw = new_profile * np.random.uniform(0.85, 1.15, new_profile.shape)
             elif generator.type_of_generator == 'CHP':
-                # Create a new df with the CHP profile. The profile will be equal to zero if the time is inferior to 9 AM or 17 PM, and equal to p_max_kw if the time is between 9 AM and 17 PM.
                 chp_profile = pd.DataFrame(index = pv_generation_profile.index, columns = ['value'])
                 for i, time in enumerate(chp_profile.index):
                     if time.hour < 9 or time.hour > 17:
