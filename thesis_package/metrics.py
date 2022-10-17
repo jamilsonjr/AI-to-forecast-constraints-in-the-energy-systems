@@ -75,7 +75,19 @@ class Metrics:
         print('false_negatives_ctr: ', fn)
         
         print((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
-        
+    def compute_confusion_matrix(self, pred, real):
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for bus in pred.columns:
+            try:
+                tp += sum((pred[bus] == 1) & (real[bus] == 1))
+                tn += sum((pred[bus] == 0) & (real[bus] == 0))
+                fp += sum((pred[bus] == 1) & (real[bus] == 0))
+                fn += sum((pred[bus] == 0) & (real[bus] == 1))
+            except: 
+                print('There was a problem with bus: ', bus)
+                if not real[bus].any():
+                    print('Bus {} has no positive data points. Just ignore the little shit.'.format(bus))    
+        return tp, tn, fp, fn
     def print_report(self):
         # Print the above results.
         print('Hybrid Metrics: \n')
