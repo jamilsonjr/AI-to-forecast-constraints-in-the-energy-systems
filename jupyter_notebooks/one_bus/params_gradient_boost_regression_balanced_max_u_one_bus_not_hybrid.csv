@@ -1,0 +1,5 @@
+params,value
+n_estimators,47
+learning_rate,0.13485335645340976
+loss,squared_error
+value,0.536030767991457
