@@ -55,7 +55,7 @@ class Power_Flow:
         q_load_profile_kvar.columns = ['reactive_' + i for i in q_load_profile_kvar.columns]
         # Combine the active and reactive power profiles into a single dataframe.
         self.profile_data = pd.concat([p_gen_profile_kw, q_gen_profile_kvar, p_load_profile_kw, q_load_profile_kvar], axis=1).reset_index(drop=True)
-    def run_timeseries_power_flow(self, network, path_to_results_folder='.'):
+    def run_timeseries_power_flow(self, network, path_to_results_folder='.', gen_error=1.0):
         """Function that runs the power flow.
         Args:
             None
@@ -69,10 +69,10 @@ class Power_Flow:
         timestamps_index = deepcopy(self.p_load_profile_kw.index)
         # Changes
         # Some adjustments are made in order to balance out the constraints.
-        _p_load_profile_kw = deepcopy(self.p_load_profile_kw * 0.7)
-        _q_load_profile_kvar = deepcopy(self.q_load_profile_kvar * 0.7)
-        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2)
-        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2)
+        _p_load_profile_kw = deepcopy(self.p_load_profile_kw * 0.7) # Adjustments used during the thesis
+        _q_load_profile_kvar = deepcopy(self.q_load_profile_kvar * 0.7) # Adjustments used during the thesis
+        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2) * gen_error # Adjustments used during the thesis
+        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2) * gen_error # Adjustments used during the thesis
         _p_load_profile_kw.reset_index(drop=True, inplace=True) 
         _q_load_profile_kvar.reset_index(drop=True, inplace=True) 
         _p_gen_profile_kw.reset_index(drop=True, inplace=True) 
