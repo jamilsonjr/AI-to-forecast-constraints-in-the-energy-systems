@@ -1,17 +1,22 @@
 #%%
+import numpy as np
 import pandas as pd
+import re
 from pandapower.control.controller.const_control import ConstControl
 from pandapower.timeseries.data_sources.frame_data import DFData
 from pandapower.timeseries.run_time_series import run_timeseries
 from pandapower.timeseries.output_writer import OutputWriter
+
 
 from thesis_package import utils as ut
 
 from copy import deepcopy
 
 class Power_Flow:
-    def create_power_flow_profiles_df(self, network):
+    def create_power_flow_profiles_df(self, network, prediction_error=False):
         """Function that creates a dataframe with the power flow profiles.
+            If prediction error is True, prediction error will be applied
+            to gen and load profiles.
         Args:
             network: Network class object.
         Returns:
@@ -55,14 +60,71 @@ class Power_Flow:
         q_load_profile_kvar.columns = ['reactive_' + i for i in q_load_profile_kvar.columns]
         # Combine the active and reactive power profiles into a single dataframe.
         self.profile_data = pd.concat([p_gen_profile_kw, q_gen_profile_kvar, p_load_profile_kw, q_load_profile_kvar], axis=1).reset_index(drop=True)
-    def run_timeseries_power_flow(self, network, path_to_results_folder='.', gen_error=1.0):
+        if prediction_error:
+            # Prediciton error values
+            pv_mean_prediction_error = 0.085
+            wind_mean_prediction_error = 0.168
+            load_mean_prediction_error = 0.0377
+            # Create error signal: excess for gen and deficet for load
+            expected_shape = self.profile_data.iloc[:,0].shape
+            error_signal = lambda value, element_type:\
+                        np.random.uniform(1.0, 1.0 + value * 2, expected_shape) if element_type == 'gen' else\
+                        np.random.uniform(1.0 - value * 2, 1.0, expected_shape) if element_type == 'load' else \
+                        np.ones(expected_shape)
+            # Apply generation and consumption error to self.profile.
+            # Caution, ugly code ahead! To refactor...
+            for i, data in enumerate([self.p_load_profile_kw, self.q_load_profile_kvar, self.p_gen_profile_kw, self.q_gen_profile_kvar]):
+                for col in data.columns:
+                    # Get the number of the element
+                    match = re.search(r'\d+', col)
+                    element_index = int( match.group()) if match else None
+                    gen_type = lambda element_index: network.generator_list[element_index - 1].type_of_generator
+                    prediction_error_value = lambda gen_type:\
+                                            pv_mean_prediction_error if re.search(r'pv', gen_type, re.IGNORECASE) else\
+                                            wind_mean_prediction_error if re.search(r'wind', gen_type, re.IGNORECASE) else\
+                                            load_mean_prediction_error if re.search(r'load', gen_type, re.IGNORECASE) else\
+                                            0
+                    print('Element: ', col)
+                    if 'gen' in col:
+                        value = prediction_error_value(gen_type(element_index))
+                        print('Gen type: ', gen_type(element_index))
+                        print('prediction error value: ', value)
+                        _new_profile = data[col] * error_signal(value, 'gen')
+                        diff = _new_profile - data[col]
+                        print('mean error signal value: ', error_signal(value, 'gen').mean())
+                        print('mean difference gen: ',  diff.mean())
+                        data[col] = deepcopy(_new_profile)
+                    elif 'load' in col:
+                        value = prediction_error_value('load')
+                        print('Gen type: ', col)
+                        print('prediction error value: ', value)
+                        _new_profile = data[col] * error_signal(value, 'load')
+                        diff = _new_profile - data[col]
+                        print('mean error signal value: ', error_signal(value, 'load').mean())
+                        print('mean difference load: ',  diff.mean())
+                        data[col] = deepcopy(_new_profile)
+                    else: 
+                        pass
+                    print('-------')
+                if i == 0:
+                    self.p_load_profile_kw = data
+                elif i == 1:
+                    self.q_load_profile_kvar = data
+                elif i == 2:
+                    self.p_gen_profile_kw = data
+                elif i == 3:
+                    self.q_gen_profile_kvar = data
+                    
+                    
+            
+    def run_timeseries_power_flow(self, network, path_to_results_folder='.', prediction_error=False):
         """Function that runs the power flow.
         Args:
             None
         Returns:
             None
         """
-        self.create_power_flow_profiles_df(network)
+        self.create_power_flow_profiles_df(network, prediction_error)
         net = network.net_model
         # Reset index.
         from copy import deepcopy
@@ -71,8 +133,9 @@ class Power_Flow:
         # Some adjustments are made in order to balance out the constraints.
         _p_load_profile_kw = deepcopy(self.p_load_profile_kw * 0.7) # Adjustments used during the thesis
         _q_load_profile_kvar = deepcopy(self.q_load_profile_kvar * 0.7) # Adjustments used during the thesis
-        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2) * gen_error # Adjustments used during the thesis
-        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2) * gen_error # Adjustments used during the thesis
+        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2)
+        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2)
+        # Add logic to differentiate PV from Wind
         _p_load_profile_kw.reset_index(drop=True, inplace=True) 
         _q_load_profile_kvar.reset_index(drop=True, inplace=True) 
         _p_gen_profile_kw.reset_index(drop=True, inplace=True) 
@@ -131,3 +194,4 @@ class Power_Flow:
         self.res_bus_vm_pu.to_csv(path_to_results_folder + '\pf_res_bus_vm_pu.csv', index=False)
         self.res_line_loading_percent.to_csv(path_to_results_folder + '\pf_res_line_loading_percent.csv', index=False)
         self.res_line_i_ka.to_csv(path_to_results_folder + '\pf_res_line_i_ka.csv', index=False)
+        
