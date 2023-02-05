@@ -132,8 +132,8 @@ class Power_Flow:
         # Changes
         # Some adjustments are made in order to balance out the constraints.
         if prediction_error == 'static':
-            load_error = 1.15
-            gen_error = 0.85
+            load_error = 1.30
+            gen_error = 0.65
         else: 
             load_error = 1
             gen_error = 1
