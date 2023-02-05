@@ -17,6 +17,7 @@ class Metrics:
                 pd.DataFrame: Dataframe with the power flow profiles.
             """
         # Computation.
+        print('Threshold: ', threshold)
         _y_test_minus_threshold = y_test.reset_index(drop=True) - threshold
         _y_pred_minus_threshold = y_pred - threshold
         _error = (_y_test_minus_threshold - _y_pred_minus_threshold)
@@ -47,15 +48,19 @@ class Metrics:
                         self.true_negatives_ctr += 1
         # rmse
         compute_rmse = lambda num, den: sqrt(num / den) if den != 0 else 0  
+        print('true_positives_sse: ', true_positives_sse)
         self.true_positives_rmse = compute_rmse(true_positives_sse, self.true_positives_ctr) 
         self.false_positives_rmse = compute_rmse(false_positives_sse, self.false_positives_ctr)
         self.false_negatives_rmse = compute_rmse(false_negatives_sse, self.false_negatives_ctr)
         self.true_negatives_rmse = compute_rmse(true_negatives_sse, self.true_negatives_ctr)
-        # Hybrid Metrics w/ rmse
+        print('self.true_positives_rmse: ', self.true_positives_rmse)
+        # Hybrid Confusion matrix w/ rmse
         self.hybrid_true_positives_rmse = self.true_positives_ctr - (self.true_positives_ctr * self.true_positives_rmse)
         self.hybrid_true_negatives_rmse = self.true_negatives_ctr - (self.true_negatives_ctr * self.true_negatives_rmse)
         self.hybrid_false_positives_rmse = self.false_positives_ctr + (self.false_positives_ctr * self.false_positives_rmse)
         self.hybrid_false_negatives_rmse = self.false_negatives_ctr + (self.false_negatives_ctr * self.false_negatives_rmse)
+        print('self.hybrid_true_positives_rmse: ', self.hybrid_true_positives_rmse)
+        print('self.true_positives_ctr: ', self.true_positives_ctr)
         # Hybrid Metrics w/ rmse
         self.hybrid_recall = self.compute_recall(self.hybrid_true_positives_rmse, self.hybrid_false_negatives_rmse)
         self.hybrid_precision = self.compute_precision(self.hybrid_true_positives_rmse, self.hybrid_false_positives_rmse)
@@ -68,13 +73,7 @@ class Metrics:
         self.f1 = self.compute_f1(self.recall, self.precision)
         self.accuracy = self.compute_accuracy(self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr)
         tp, tn, fp, fn = self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr
-        self.mcc = self.compute_mcc(self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr)
-        print('true_positives_ctr: ', tp)
-        print('true_negatives_ctr: ', tn)
-        print('false_positives_ctr: ', fp)
-        print('false_negatives_ctr: ', fn)
-        
-        print((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        self.mcc = self.compute_mcc(self.true_positives_ctr, self.true_negatives_ctr, self.false_positives_ctr, self.false_negatives_ctr)  
     def compute_confusion_matrix(self, pred, real):
         tp, tn, fp, fn = 0, 0, 0, 0
         for bus in pred.columns:
