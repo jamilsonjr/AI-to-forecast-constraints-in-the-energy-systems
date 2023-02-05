@@ -62,14 +62,14 @@ class Power_Flow:
         self.profile_data = pd.concat([p_gen_profile_kw, q_gen_profile_kvar, p_load_profile_kw, q_load_profile_kvar], axis=1).reset_index(drop=True)
         if prediction_error:
             # Prediciton error values
-            pv_mean_prediction_error = 0.085
-            wind_mean_prediction_error = 0.168
-            load_mean_prediction_error = 0.0377
+            pv_mean_prediction_error = 0.085 * 5
+            wind_mean_prediction_error = 0.168 * 5
+            load_mean_prediction_error = 0.0377 * 4
             # Create error signal: excess for gen and deficet for load
             expected_shape = self.profile_data.iloc[:,0].shape
             error_signal = lambda value, element_type:\
-                        np.random.uniform(1.0, 1.0 + value * 2, expected_shape) if element_type == 'gen' else\
-                        np.random.uniform(1.0 - value * 2, 1.0, expected_shape) if element_type == 'load' else \
+                        np.random.uniform(1.0, 1.0 - value * 2, expected_shape) if element_type == 'gen' else\
+                        np.random.uniform(1.0 + value * 2, 1.0, expected_shape) if element_type == 'load' else \
                         np.ones(expected_shape)
             # Apply generation and consumption error to self.profile.
             # Caution, ugly code ahead! To refactor...
