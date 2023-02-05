@@ -13,7 +13,7 @@ from thesis_package import utils as ut
 from copy import deepcopy
 
 class Power_Flow:
-    def create_power_flow_profiles_df(self, network, prediction_error=False):
+    def create_power_flow_profiles_df(self, network, prediction_error='random'):
         """Function that creates a dataframe with the power flow profiles.
             If prediction error is True, prediction error will be applied
             to gen and load profiles.
@@ -60,7 +60,7 @@ class Power_Flow:
         q_load_profile_kvar.columns = ['reactive_' + i for i in q_load_profile_kvar.columns]
         # Combine the active and reactive power profiles into a single dataframe.
         self.profile_data = pd.concat([p_gen_profile_kw, q_gen_profile_kvar, p_load_profile_kw, q_load_profile_kvar], axis=1).reset_index(drop=True)
-        if prediction_error:
+        if prediction_error == 'random':
             # Prediciton error values
             pv_mean_prediction_error = 0.085 * 6
             wind_mean_prediction_error = 0.168 * 6
@@ -68,7 +68,7 @@ class Power_Flow:
             # Create error signal: excess for gen and deficet for load
             expected_shape = self.profile_data.iloc[:,0].shape
             error_signal = lambda value, element_type:\
-                        np.random.uniform(1.0, 1.0 + value * 2, expected_shape) if element_type == 'gen' else\
+                        np.random.uniform(1.0, 1.0 - value * 2, expected_shape) if element_type == 'gen' else\
                         np.random.uniform(1.0 + value * 2, 1.0, expected_shape) if element_type == 'load' else \
                         np.ones(expected_shape)
             # Apply generation and consumption error to self.profile.
@@ -117,7 +117,7 @@ class Power_Flow:
                     
                     
             
-    def run_timeseries_power_flow(self, network, path_to_results_folder='.', prediction_error=False):
+    def run_timeseries_power_flow(self, network, path_to_results_folder='.', prediction_error='random'):
         """Function that runs the power flow.
         Args:
             None
@@ -131,10 +131,16 @@ class Power_Flow:
         timestamps_index = deepcopy(self.p_load_profile_kw.index)
         # Changes
         # Some adjustments are made in order to balance out the constraints.
-        _p_load_profile_kw = deepcopy(self.p_load_profile_kw * 0.7) # Adjustments used during the thesis
-        _q_load_profile_kvar = deepcopy(self.q_load_profile_kvar * 0.7) # Adjustments used during the thesis
-        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2)
-        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2)
+        if prediction_error == 'static':
+            load_error = 1.15
+            gen_error = 0.85
+        else: 
+            load_error = 1
+            gen_error = 1
+        _p_load_profile_kw = deepcopy(self.p_load_profile_kw * 0.7)  * load_error # Adjustments used during the thesis
+        _q_load_profile_kvar = deepcopy(self.q_load_profile_kvar * 0.7) * load_error # Adjustments used during the thesis
+        _p_gen_profile_kw = deepcopy(self.p_gen_profile_kw * 2) * gen_error
+        _q_gen_profile_kvar = deepcopy(self.q_gen_profile_kvar * 2) * gen_error
         # Add logic to differentiate PV from Wind
         _p_load_profile_kw.reset_index(drop=True, inplace=True) 
         _q_load_profile_kvar.reset_index(drop=True, inplace=True) 
